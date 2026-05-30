@@ -9,7 +9,7 @@ from sqlalchemy import text
 from ..auth import issue_jwt, upsert_google_user, verify_google_token
 from ..extensions import db
 from ..models import BlogPost, DesignProfile, NewsletterSubscription
-from ..services.design_service import DEFAULT_DESIGN_PROFILE
+from ..services.design_service import DEFAULT_DESIGN_PROFILE, normalized_profile
 from ..services.email_service import send_email
 
 bp = Blueprint("public", __name__)
@@ -38,7 +38,9 @@ def site():
 @bp.get("/design")
 def design():
     profile = DesignProfile.query.filter_by(status="active").order_by(DesignProfile.updated_at.desc()).first()
-    return {"item": profile.to_dict() if profile else DEFAULT_DESIGN_PROFILE}
+    if not profile:
+        return {"item": DEFAULT_DESIGN_PROFILE}
+    return {"item": normalized_profile(profile.to_dict(), profile.industry or current_app.config["SITE_INDUSTRY"])}
 
 
 @bp.get("/openapi.json")

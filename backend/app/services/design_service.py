@@ -137,3 +137,13 @@ def profile_for_industry(industry: str, competitor_urls: Optional[list[str]] = N
     profile["source"] = "industry-preset"
     profile["competitorUrls"] = competitor_urls or []
     return profile
+
+
+def normalized_profile(data: dict, industry: str = "education") -> dict:
+    base = profile_for_industry(industry)
+    profile = deep_merge(base, data or {})
+    profile["tokens"] = deep_merge(base["tokens"], profile.get("tokens") or {})
+    profile["voice"] = deep_merge(base["voice"], profile.get("voice") or {})
+    if not isinstance(profile.get("competitorUrls"), list):
+        profile["competitorUrls"] = []
+    return profile

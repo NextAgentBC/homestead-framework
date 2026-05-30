@@ -9,7 +9,7 @@ from ..extensions import db
 from ..models import BlogPost, DesignProfile
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
-from ..services.design_service import deep_merge, profile_for_industry
+from ..services.design_service import deep_merge, normalized_profile, profile_for_industry
 
 bp = Blueprint("admin", __name__)
 
@@ -90,7 +90,7 @@ def get_design():
     if not profile:
         data = profile_for_industry(current_app.config["SITE_INDUSTRY"])
         return {"item": data}
-    return {"item": profile.to_dict()}
+    return {"item": normalized_profile(profile.to_dict(), profile.industry or current_app.config["SITE_INDUSTRY"])}
 
 
 @bp.patch("/design")
@@ -123,13 +123,16 @@ def update_design():
         profile.personality = data["personality"]
     if "competitorUrls" in data:
         profile.competitor_urls = data["competitorUrls"]
-    if "tokens" in data:
+    if "tokens" in data and isinstance(data["tokens"], dict):
         profile.tokens = deep_merge(profile.tokens or {}, data["tokens"])
-    if "voice" in data:
+    if "voice" in data and isinstance(data["voice"], dict):
         profile.voice = deep_merge(profile.voice or {}, data["voice"])
     if "notes" in data:
         profile.notes = data["notes"]
 
+    normalized = normalized_profile(profile.to_dict(), profile.industry or current_app.config["SITE_INDUSTRY"])
+    profile.tokens = normalized["tokens"]
+    profile.voice = normalized["voice"]
     db.session.commit()
     return {"item": profile.to_dict()}
 
@@ -168,13 +171,16 @@ def generate_design():
 def analyze_design_competitors():
     data = request.get_json(silent=True) or {}
     competitor_urls = data.get("competitorUrls") or []
-    if not competitor_urls:
+    if not isinstance(competitor_urls, list) or not competitor_urls:
         return jsonify({"error": {"code": "bad_request", "message": "competitorUrls is required"}}), 400
+    observations = data.get("observations") or []
+    if not isinstance(observations, list):
+        return jsonify({"error": {"code": "bad_request", "message": "observations must be a list"}}), 400
 
     generated = analyze_competitors(
         data.get("industry") or current_app.config["SITE_INDUSTRY"],
         competitor_urls,
-        observations=data.get("observations") or [],
+        observations=observations,
         notes=data.get("notes") or "",
     )
 

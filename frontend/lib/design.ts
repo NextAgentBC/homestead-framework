@@ -1,13 +1,19 @@
 import type { CSSProperties } from "react";
-import type { DesignProfile } from "./api";
+import { fallbackDesign, type DesignProfile } from "./api";
 
 type DesignVariables = CSSProperties & Record<`--${string}`, string>;
 
 export function designCssVariables(design: DesignProfile): DesignVariables {
-  const colors = design.tokens.colors;
-  const typography = design.tokens.typography;
-  const radius = design.tokens.radius;
-  const layout = design.tokens.layout;
+  const tokens = {
+    colors: { ...fallbackDesign.tokens.colors, ...(design.tokens?.colors || {}) },
+    typography: { ...fallbackDesign.tokens.typography, ...(design.tokens?.typography || {}) },
+    radius: { ...fallbackDesign.tokens.radius, ...(design.tokens?.radius || {}) },
+    layout: { ...fallbackDesign.tokens.layout, ...(design.tokens?.layout || {}) }
+  };
+  const colors = tokens.colors;
+  const typography = tokens.typography;
+  const radius = tokens.radius;
+  const layout = tokens.layout;
 
   return {
     "--color-ink": colors.ink,
@@ -31,4 +37,3 @@ export function designCssVariables(design: DesignProfile): DesignVariables {
     "--layout-section-gap": layout.sectionGap
   };
 }
-
