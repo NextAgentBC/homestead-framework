@@ -22,6 +22,7 @@ Build a reusable full-stack website framework:
 - Database: PostgreSQL.
 - Auth: Google Sign-In.
 - Content: blog + newsletter.
+- UI/UX: API-driven design profile, not hard-coded theme values.
 - Automation: daily AI-generated blog posts.
 - Delivery: Cloudflare Tunnel preferred, static IP + Nginx fallback.
 - Maintenance: OpenAPI contract and clear module boundaries for OpenClaw/Codex.
@@ -43,6 +44,7 @@ Important backend files:
 - `backend/app/routes/`: HTTP API behavior.
 - `backend/app/services/`: replaceable integrations such as DeepSeek and SMTP.
 - `backend/app/openapi.json`: machine-readable API map for OpenClaw/Codex.
+- `backend/app/services/design_service.py`: industry design presets and token merge logic.
 - `backend/migrations/`: Alembic/Flask-Migrate migrations.
 
 Important frontend files:
@@ -52,6 +54,7 @@ Important frontend files:
 - `frontend/components/google-login.tsx`: Google Sign-In integration.
 - `frontend/components/newsletter-form.tsx`: newsletter signup.
 - `frontend/lib/api.ts`: all frontend API calls.
+- `frontend/lib/design.ts`: maps API design tokens to CSS variables.
 
 ## Local Development
 
@@ -164,6 +167,7 @@ Public:
 
 - `GET /api/health`
 - `GET /api/site`
+- `GET /api/design`
 - `GET /api/openapi.json`
 - `POST /api/auth/google`
 - `GET /api/blogs`
@@ -176,12 +180,66 @@ Admin:
 - `POST /api/admin/blogs/generate`
 - `POST /api/admin/blogs`
 - `PATCH /api/admin/blogs/:id`
+- `GET /api/admin/design`
+- `PATCH /api/admin/design`
+- `POST /api/admin/design/generate`
 
 Admin requests require:
 
 ```text
 Authorization: Bearer <jwt-from-google-login>
 ```
+
+## UI/UX Personalization
+
+Do not make every student website look the same.
+
+The frontend consumes `GET /api/design`, then maps the returned tokens to CSS variables. Do not hard-code permanent colors, fonts, radii, or layout density inside page components unless they are structural and industry-neutral.
+
+Design profile responsibilities:
+
+- `industry`: education, accounting, retail, healthcare, real estate, etc.
+- `competitorUrls`: websites the student's Codex/OpenClaw should inspect for design direction.
+- `tokens.colors`: brand palette and contrast system.
+- `tokens.typography`: body, heading, and monospace font stacks.
+- `tokens.radius`: card/control/pill shape.
+- `tokens.layout`: max content width, hero height, spacing density.
+- `voice`: headline and tone guidance for page copy.
+- `notes`: rationale so future agents know why the design exists.
+
+Generate a profile:
+
+```bash
+curl -X POST https://api.student-domain.example/api/admin/design/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "industry": "accounting",
+    "competitorUrls": [
+      "https://example-accounting-firm.com",
+      "https://another-local-competitor.com"
+    ],
+    "notes": "Use competitor URLs as visual references, but create a distinct identity."
+  }'
+```
+
+Update one design token:
+
+```bash
+curl -X PATCH https://api.student-domain.example/api/admin/design \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tokens": {
+      "colors": {
+        "primary": "#174f7a",
+        "accent": "#b85c38"
+      }
+    }
+  }'
+```
+
+When using competitor sites, never copy a competitor's exact brand identity. Use them to infer category expectations, spacing density, visual hierarchy, and content patterns, then produce a distinct profile.
 
 ## Daily Blog Automation
 
@@ -258,9 +316,10 @@ When OpenClaw or Codex modifies this project:
 1. Respect the API contract in `docs/api-contract.md`.
 2. Keep database changes in `backend/app/models.py` plus a migration.
 3. Keep integrations isolated in `backend/app/services/`.
-4. Never hard-code API keys, SMTP passwords, OAuth secrets, or Cloudflare tokens.
-5. Preserve `/api/openapi.json`.
-6. Run these checks before reporting success:
+4. Keep UI/UX personalization in the design profile API and CSS variables.
+5. Never hard-code API keys, SMTP passwords, OAuth secrets, or Cloudflare tokens.
+6. Preserve `/api/openapi.json`.
+7. Run these checks before reporting success:
 
 ```bash
 cd backend

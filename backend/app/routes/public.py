@@ -8,7 +8,8 @@ from sqlalchemy import text
 
 from ..auth import issue_jwt, upsert_google_user, verify_google_token
 from ..extensions import db
-from ..models import BlogPost, NewsletterSubscription
+from ..models import BlogPost, DesignProfile, NewsletterSubscription
+from ..services.design_service import DEFAULT_DESIGN_PROFILE
 from ..services.email_service import send_email
 
 bp = Blueprint("public", __name__)
@@ -32,6 +33,12 @@ def site():
             "googleClientId": current_app.config["GOOGLE_CLIENT_ID"],
         }
     }
+
+
+@bp.get("/design")
+def design():
+    profile = DesignProfile.query.filter_by(status="active").order_by(DesignProfile.updated_at.desc()).first()
+    return {"item": profile.to_dict() if profile else DEFAULT_DESIGN_PROFILE}
 
 
 @bp.get("/openapi.json")

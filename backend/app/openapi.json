@@ -10,6 +10,7 @@
   "paths": {
     "/health": { "get": { "summary": "Health check" } },
     "/site": { "get": { "summary": "Public site config" } },
+    "/design": { "get": { "summary": "Public active design profile" } },
     "/auth/google": { "post": { "summary": "Google signup/login" } },
     "/blogs": { "get": { "summary": "List published blog posts" } },
     "/blogs/{slug}": { "get": { "summary": "Get published blog post" } },
@@ -17,6 +18,11 @@
     "/contact": { "post": { "summary": "Send contact message" } },
     "/admin/blogs/generate": { "post": { "summary": "Generate AI blog post" } },
     "/admin/blogs": { "post": { "summary": "Create blog post" } },
-    "/admin/blogs/{id}": { "patch": { "summary": "Update blog post" } }
+    "/admin/blogs/{id}": { "patch": { "summary": "Update blog post" } },
+    "/admin/design": {
+      "get": { "summary": "Get active design profile" },
+      "patch": { "summary": "Update active design profile tokens" }
+    },
+    "/admin/design/generate": { "post": { "summary": "Generate design profile from industry and competitor URLs" } }
   }
 }

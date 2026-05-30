@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { AuthProvider } from "./providers";
-import { getSite } from "@/lib/api";
+import { getDesign, getSite } from "@/lib/api";
+import { designCssVariables } from "@/lib/design";
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSite();
@@ -25,10 +26,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const site = await getSite();
+  const [site, design] = await Promise.all([getSite(), getDesign()]);
   return (
     <html lang="en">
-      <body>
+      <body style={designCssVariables(design)}>
         <AuthProvider>
           <div className="shell">
             <header className="topbar">

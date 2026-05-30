@@ -1,14 +1,20 @@
 from datetime import datetime, timezone
+from typing import Optional
 
 from flask import Blueprint, current_app, jsonify, request
 from slugify import slugify
 
 from ..auth import require_auth
 from ..extensions import db
-from ..models import BlogPost
+from ..models import BlogPost, DesignProfile
 from ..services.ai_service import generate_blog_post
+from ..services.design_service import deep_merge, profile_for_industry
 
 bp = Blueprint("admin", __name__)
+
+
+def _active_design_profile() -> Optional[DesignProfile]:
+    return DesignProfile.query.filter_by(status="active").order_by(DesignProfile.updated_at.desc()).first()
 
 
 def _unique_slug(slug: str) -> str:
@@ -75,3 +81,82 @@ def update_blog(post_id: int):
     db.session.commit()
     return {"item": post.to_detail_dict()}
 
+
+@bp.get("/design")
+@require_auth(admin=True)
+def get_design():
+    profile = _active_design_profile()
+    if not profile:
+        data = profile_for_industry(current_app.config["SITE_INDUSTRY"])
+        return {"item": data}
+    return {"item": profile.to_dict()}
+
+
+@bp.patch("/design")
+@require_auth(admin=True)
+def update_design():
+    data = request.get_json(silent=True) or {}
+    profile = _active_design_profile()
+    if not profile:
+        preset = profile_for_industry(data.get("industry") or current_app.config["SITE_INDUSTRY"])
+        profile = DesignProfile(
+            name=preset["name"],
+            status="active",
+            source=preset["source"],
+            industry=preset["industry"],
+            personality=preset["personality"],
+            competitor_urls=preset["competitorUrls"],
+            tokens=preset["tokens"],
+            voice=preset["voice"],
+            notes=preset["notes"],
+        )
+        db.session.add(profile)
+
+    if "name" in data:
+        profile.name = data["name"]
+    if "source" in data:
+        profile.source = data["source"]
+    if "industry" in data:
+        profile.industry = data["industry"]
+    if "personality" in data:
+        profile.personality = data["personality"]
+    if "competitorUrls" in data:
+        profile.competitor_urls = data["competitorUrls"]
+    if "tokens" in data:
+        profile.tokens = deep_merge(profile.tokens or {}, data["tokens"])
+    if "voice" in data:
+        profile.voice = deep_merge(profile.voice or {}, data["voice"])
+    if "notes" in data:
+        profile.notes = data["notes"]
+
+    db.session.commit()
+    return {"item": profile.to_dict()}
+
+
+@bp.post("/design/generate")
+@require_auth(admin=True)
+def generate_design():
+    data = request.get_json(silent=True) or {}
+    generated = profile_for_industry(
+        data.get("industry") or current_app.config["SITE_INDUSTRY"],
+        data.get("competitorUrls") or [],
+    )
+    generated["source"] = "generated-from-industry-and-competitors"
+    if data.get("notes"):
+        generated["notes"] = data["notes"]
+
+    profile = _active_design_profile()
+    if not profile:
+        profile = DesignProfile(status="active")
+        db.session.add(profile)
+
+    profile.name = generated["name"]
+    profile.source = generated["source"]
+    profile.industry = generated["industry"]
+    profile.personality = generated["personality"]
+    profile.competitor_urls = generated["competitorUrls"]
+    profile.tokens = generated["tokens"]
+    profile.voice = generated["voice"]
+    profile.notes = generated["notes"]
+    db.session.commit()
+    return {"item": profile.to_dict()}

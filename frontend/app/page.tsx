@@ -32,17 +32,17 @@ export default async function HomePage() {
         <h2>Operating Model</h2>
         <div className="grid">
           <div className="post-card">
-            <Cloud color="#216e5f" />
+            <Cloud color="var(--color-primary)" />
             <h3>Cloudflare edge</h3>
             <p>Use Tunnel first: public domain, private origin, simple TLS, fewer firewall lessons on day one.</p>
           </div>
           <div className="post-card">
-            <BookOpen color="#b54945" />
+            <BookOpen color="var(--color-accent)" />
             <h3>Daily publishing</h3>
             <p>DeepSeek generates structured drafts or published posts through a Flask CLI and systemd timer.</p>
           </div>
           <div className="post-card">
-            <Mail color="#356b9f" />
+            <Mail color="var(--color-link)" />
             <h3>User relationship</h3>
             <p>Google Sign-In creates accounts; newsletter subscriptions let the site email readers responsibly.</p>
           </div>
@@ -73,4 +73,3 @@ export default async function HomePage() {
     </main>
   );
 }
-

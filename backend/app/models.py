@@ -75,3 +75,30 @@ class NewsletterSubscription(TimestampMixin, db.Model):
     status = db.Column(db.String(32), nullable=False, default="active")
     source = db.Column(db.String(255), nullable=False, default="website")
 
+
+class DesignProfile(TimestampMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.String(32), nullable=False, default="active", index=True)
+    source = db.Column(db.String(255), nullable=False, default="default")
+    industry = db.Column(db.String(255), nullable=False, default="")
+    personality = db.Column(db.Text, nullable=False, default="")
+    competitor_urls = db.Column(db.JSON, nullable=False, default=list)
+    tokens = db.Column(db.JSON, nullable=False, default=dict)
+    voice = db.Column(db.JSON, nullable=False, default=dict)
+    notes = db.Column(db.Text, nullable=False, default="")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "status": self.status,
+            "source": self.source,
+            "industry": self.industry,
+            "personality": self.personality,
+            "competitorUrls": self.competitor_urls,
+            "tokens": self.tokens,
+            "voice": self.voice,
+            "notes": self.notes,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+        }
