@@ -10,5 +10,6 @@ Use this file when operating inside this repository.
 - For competitor-informed design, use `/api/admin/design/analyze-competitors` and document visual observations. Never copy exact competitor branding.
 - Do not commit `.env`, `.env.local`, `.venv`, `.next`, `node_modules`, or local databases.
 - Before saying the project works, run backend route/migration checks and frontend typecheck/build.
+- Run `pytest -q` from `backend/` before reporting backend changes as complete.
 - For deployment, target `oracle-server:/home/ubuntu/projects/oracle-site` unless the human gives another path.
 - Prefer Cloudflare Tunnel over direct public Nginx exposure.

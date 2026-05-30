@@ -358,6 +358,7 @@ When OpenClaw or Codex modifies this project:
 ```bash
 cd backend
 . .venv/bin/activate
+pytest -q
 flask --app app.main db upgrade
 flask --app app.main routes
 flask --app app.main blog generate-daily --draft
