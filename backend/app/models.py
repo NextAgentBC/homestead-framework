@@ -77,6 +77,7 @@ class Page(TimestampMixin, db.Model):
     nav_label = db.Column(db.String(255), nullable=False, default="")
     nav_order = db.Column(db.Integer, nullable=False, default=100)
     show_in_nav = db.Column(db.Boolean, nullable=False, default=True)
+    sections = db.Column(db.JSON, nullable=False, default=list)
     meta_title = db.Column(db.String(255), nullable=False, default="")
     meta_description = db.Column(db.String(320), nullable=False, default="")
     canonical_url = db.Column(db.Text, nullable=False, default="")
@@ -100,6 +101,7 @@ class Page(TimestampMixin, db.Model):
         item["status"] = self.status
         item["canonicalUrl"] = self.canonical_url
         item["publishedAt"] = self.published_at.isoformat() if self.published_at else None
+        item["sections"] = self.sections
         return item
 
 
