@@ -72,6 +72,36 @@ curl -s -X PATCH "$ORACLE_SITE_API/admin/compose/home/blocks/b_pricing01" \
   -d '{"content":{"items":[ ...full edited items array... ]}}'
 ```
 
+## 3.5 Batch (multi-step / Telegram) & discovery
+
+A single chat request is usually several edits. Prefer **one batch call** over many
+single calls — it's atomic, so a half-built page can't be left behind.
+
+```bash
+# "Make the home a pricing page: hero + tiers + FAQ, drop the old CTA"
+curl -s -X POST "$ORACLE_SITE_API/admin/compose/home/batch" \
+  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"atomic":true,"ops":[
+    {"op":"add","type":"hero","content":{"headline":"Simple pricing"},"position":"start"},
+    {"op":"add","type":"pricing","position":"end"},
+    {"op":"add","type":"faq","position":"end"},
+    {"op":"remove","id":"b_oldcta"}
+  ]}'
+```
+`atomic` (default true) = all-or-nothing; on failure nothing is saved and the
+response has `failedAt` + per-op `results` — report which step failed and retry.
+
+Discover everything editable (home + all pages) before picking a target:
+```bash
+curl -s "$ORACLE_SITE_API/admin/surfaces" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" \
+  | jq '.items[] | {target, kind, status, blocks: [.blocks[].type]}'
+```
+
+**Per-block skills:** each block type also has a thin trigger skill
+(`oracle-site-block-hero`, `…-pricing`, …) so "加个价格表 / add an FAQ" routes
+precisely; they all delegate here. Regenerate after adding a block type:
+`python3 skills/generate-block-skills.py`.
+
 ## 4. Rules
 - **Discover before you write.** Use real `type` / `variant` values from `/blocks` and real ids from the target's list. Unknown type/variant/id or a bad `position` returns a clear `error.message` — read it and retry.
 - **Objects merge, arrays replace.** For list edits: read → modify the array → send it back.

@@ -48,6 +48,12 @@
     },
     "/admin/compose/{target}/blocks/{blockId}/duplicate": {
       "post": { "summary": "Duplicate a block" }
+    },
+    "/admin/compose/{target}/batch": {
+      "post": { "summary": "Apply many block ops in one call (add/update/move/duplicate/remove); atomic by default" }
+    },
+    "/admin/surfaces": {
+      "get": { "summary": "List every editable surface (home + all pages) with their blocks" }
     }
   }
 }

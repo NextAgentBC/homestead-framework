@@ -102,6 +102,26 @@ def test_ensure_ids_backfills_and_is_idempotent():
     assert bs.ensure_ids(s) is False
 
 
+def test_apply_op_dispatches_each_kind():
+    s = []
+    a = bs.apply_op(s, {"op": "add", "type": "hero", "position": "end"})
+    assert s[0]["type"] == "hero"
+    bs.apply_op(s, {"op": "add", "type": "cta", "position": "start"})
+    bs.apply_op(s, {"op": "update", "id": a["id"], "content": {"headline": "Hi"}})
+    assert next(b for b in s if b["id"] == a["id"])["content"]["headline"] == "Hi"
+    bs.apply_op(s, {"op": "duplicate", "id": a["id"]})
+    bs.apply_op(s, {"op": "move", "id": a["id"], "position": "end"})
+    assert [b["type"] for b in s] == ["cta", "hero", "hero"]
+    bs.apply_op(s, {"op": "remove", "id": s[-1]["id"]})
+    assert len(s) == 2
+
+
+def test_apply_op_unknown_op_raises():
+    with pytest.raises(bs.BlockError) as e:
+        bs.apply_op([], {"op": "frobnicate"})
+    assert "Unknown op" in str(e.value)
+
+
 def test_summarize_shape():
     s = [bs.make_block("hero", content={"headline": "Welcome"}), bs.make_block("features")]
     out = bs.summarize(s)

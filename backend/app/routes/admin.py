@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -345,6 +346,70 @@ def compose_remove(target, block_id):
     removed = block_service.remove_block(sections, block_id)
     _save_surface(obj, sections)
     return {"item": {"id": block_id, "type": removed.get("type"), "deleted": True}, "page": _surface_payload(kind, obj, sections)}
+
+
+@bp.post("/compose/<target>/batch")
+@require_auth(admin=True)
+def compose_batch(target):
+    """Apply many block ops in one call — built for chat (Telegram) where a single
+    request ("a pricing page: hero + 3 tiers + FAQ") is several block edits.
+    ops: [{op:add|update|move|duplicate|remove, ...}]. atomic (default true):
+    all-or-nothing — on any failure nothing is saved and failedAt is returned."""
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    data = request.get_json(silent=True) or {}
+    ops = data.get("ops")
+    if not isinstance(ops, list) or not ops:
+        return jsonify({"error": {"code": "bad_request", "message": "ops must be a non-empty list."}}), 400
+    atomic = bool(data.get("atomic", True))
+
+    block_service.ensure_ids(sections)
+    working = deepcopy(sections)  # mutate a copy so atomic can discard on failure
+    results = []
+    for i, op in enumerate(ops):
+        op_name = op.get("op") if isinstance(op, dict) else None
+        try:
+            block = block_service.apply_op(working, op)
+            results.append({"index": i, "ok": True, "op": op_name,
+                            "id": block.get("id") if isinstance(block, dict) else None})
+        except block_service.BlockError as exc:
+            results.append({"index": i, "ok": False, "op": op_name, "error": str(exc)})
+            if atomic:
+                return jsonify({"error": {"code": "bad_request",
+                    "message": f"Batch failed at op {i}: {exc} No changes were applied (atomic).",
+                    "failedAt": i, "results": results}}), 400
+
+    _save_surface(obj, working)
+    return {"item": {"applied": sum(1 for r in results if r["ok"]), "total": len(ops), "results": results},
+            "page": _surface_payload(kind, obj, working)}
+
+
+@bp.get("/surfaces")
+@require_auth(admin=True)
+def list_surfaces():
+    """One call that lists every editable surface — the home composition plus all
+    pages (with status) and their blocks. Lets a Telegram bot answer "what can I
+    edit?" and pick a target before composing."""
+    out = []
+    _, home_obj, home_sections = _resolve_surface("home")
+    home_changed = block_service.ensure_ids(home_sections)
+    if home_changed:
+        home_obj.sections = home_sections
+    out.append({"target": "home", "kind": "home", "name": home_obj.name,
+                "mode": "sections", "blocks": block_service.summarize(home_sections)})
+
+    for page in Page.query.order_by(Page.nav_order.asc(), Page.title.asc()).all():
+        secs = list(page.sections or [])
+        if block_service.ensure_ids(secs):
+            page.sections = secs
+        out.append({"target": page.slug, "kind": "page", "title": page.title,
+                    "status": page.status, "showInNav": page.show_in_nav,
+                    "mode": "sections" if secs else "markdown",
+                    "blocks": block_service.summarize(secs)})
+
+    db.session.commit()
+    return {"items": out, "meta": {"count": len(out)}}
 
 
 RESERVED_SLUGS = {"blog", "blogs", "contact", "api", "admin", "_next"}

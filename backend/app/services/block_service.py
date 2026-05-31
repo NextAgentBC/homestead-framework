@@ -355,6 +355,29 @@ def remove_block(sections: list, block_id: str) -> dict:
     return sections.pop(_require_index(sections, block_id))
 
 
+VALID_OPS = ("add", "update", "move", "duplicate", "remove")
+
+
+def apply_op(sections: list, op: dict) -> dict:
+    """Apply a single batch operation in place; return the affected block.
+    Raises BlockError (with a machine-readable message) on any problem so the
+    caller can roll back / report failedAt. Used by the batch endpoint."""
+    if not isinstance(op, dict):
+        raise BlockError("Each op must be an object with an 'op' field.")
+    kind = (op.get("op") or "").strip().lower()
+    if kind == "add":
+        return add_block(sections, op.get("type"), op.get("variant"), op.get("content"), op.get("position", "end"))
+    if kind == "update":
+        return update_block(sections, op.get("id"), op.get("variant"), op.get("content"), bool(op.get("replaceContent", False)))
+    if kind == "move":
+        return move_block(sections, op.get("id"), op.get("position", "end"))
+    if kind == "duplicate":
+        return duplicate_block(sections, op.get("id"))
+    if kind == "remove":
+        return remove_block(sections, op.get("id"))
+    raise BlockError(f"Unknown op '{op.get('op')}'. Valid: {', '.join(VALID_OPS)}.")
+
+
 def _block_title(block: dict) -> str:
     c = block.get("content") or {}
     return c.get("heading") or c.get("headline") or c.get("title") or ""
