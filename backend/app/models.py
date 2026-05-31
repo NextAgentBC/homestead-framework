@@ -122,6 +122,7 @@ class DesignProfile(TimestampMixin, db.Model):
     tokens = db.Column(db.JSON, nullable=False, default=dict)
     voice = db.Column(db.JSON, nullable=False, default=dict)
     notes = db.Column(db.Text, nullable=False, default="")
+    sections = db.Column(db.JSON, nullable=False, default=list)
 
     def to_dict(self) -> dict:
         return {
@@ -135,5 +136,6 @@ class DesignProfile(TimestampMixin, db.Model):
             "tokens": self.tokens,
             "voice": self.voice,
             "notes": self.notes,
+            "sections": self.sections,
             "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -1,8 +1,8 @@
 ---
 name: oracle-site-design
-description: "Read or change the Oracle Site UI/UX design profile (colors, fonts, radius, layout) over its API. Triggers: '改主题色 / 换配色 / 改颜色', 'change site colors/theme', '改字体', '生成设计风格 / 换风格', 'generate design profile', '分析竞品设计', 'competitor design', '看当前设计'."
+description: "Design the Oracle Site's look — interview the user, offer 2-3 style options (Apple-style minimal / Tesla-style bold-dark / editorial), apply one, then fine-tune colors, fonts, hero style, and section content. Triggers: '设计网站 / 换个风格 / 重新设计首页', 'make it like apple / tesla / stripe', '改主题色 / 换配色 / 改颜色', 'design the homepage', 'hero 换成大图 / 居中', '看起来更高级 / 更大胆 / 更简洁', 'generate a design', '分析竞品设计'."
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   openclaw:
     category: "website"
     requires:
@@ -10,43 +10,68 @@ metadata:
         - curl
 ---
 
-# Oracle Site — Design Profile
+# Oracle Site — Design (conversational)
 
-> Prerequisite: read `../oracle-site-shared/SKILL.md` for `$ORACLE_SITE_API`, auth, and `$ORACLE_SITE_TOKEN`.
+> Prerequisite: `../oracle-site-shared/SKILL.md` for `$ORACLE_SITE_API` + `$ORACLE_SITE_TOKEN`.
 
-The frontend maps these tokens to CSS variables. Change the look-and-feel through this API, not by hardcoding colors/fonts in components.
+Design has two layers, both in the active design profile, both render **instantly**:
+- **Theme** — `tokens` (colors / fonts / radius / spacing).
+- **Composition** — `sections`: an ordered list of `hero`, `features`, `cta`, each with a **variant**.
 
-## Public (no auth)
+## Run this as a conversation
 
-```bash
-curl -s "$ORACLE_SITE_API/design"        # active profile: tokens.colors / typography / radius / layout, voice, notes
-```
+1. **Understand the taste.** If the user names a reference site or a vibe, map it (see Reference library). If unclear, ask up to 3 short questions: business/industry? a reference site or feeling (minimal / bold / warm / professional)? light or dark?
+2. **Offer 2-3 options**, one line each — preset + hero + palette + why. e.g.
+   - *Minimal (Apple-style)* — centered big type, lots of whitespace, neutral + blue. Calm, premium.
+   - *Bold Dark (Tesla-style)* — full-bleed dark hero, red accent. Dramatic.
+   - *Editorial* — warm split hero. Friendly, content-first.
+3. **Apply** the chosen preset:
+   ```bash
+   curl -s -X POST "$ORACLE_SITE_API/admin/design/generate" \
+     -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+     -d '{"preset": "minimal"}'        # minimal | bold-dark | editorial
+   ```
+4. **Fine-tune** with PATCH (tokens merge; `sections` replaces the whole list):
+   ```bash
+   # colors
+   curl -s -X PATCH "$ORACLE_SITE_API/admin/design" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+     -d '{"tokens": {"colors": {"primary": "#0a6cff", "accent": "#e8505b"}}}'
 
-## Admin (Bearer token)
+   # hero variant + real copy, and the rest of the page
+   curl -s -X PATCH "$ORACLE_SITE_API/admin/design" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+     -d '{"sections": [
+       {"type":"hero","variant":"centered","content":{"kicker":"Accounting","headline":"Books you can trust","subhead":"Calm, accurate bookkeeping for small teams.","cta":{"label":"Book a call","href":"/contact"},"secondaryCta":{"label":"Services","href":"/services"}}},
+       {"type":"features","variant":"minimal","content":{"heading":"What we do","items":[{"icon":"shield","title":"Compliance","body":"Filed right, on time."},{"icon":"gauge","title":"Clarity","body":"Numbers you understand."},{"icon":"layers","title":"Scale","body":"Grows with you."}]}},
+       {"type":"cta","variant":"banner","content":{"headline":"Ready to tidy your books?","cta":{"label":"Get in touch","href":"/contact"}}}
+     ]}'
+   ```
+5. For a named reference, pull live palette cues then PATCH `tokens`:
+   ```bash
+   curl -s -X POST "$ORACLE_SITE_API/admin/design/analyze-competitors" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+     -d '{"industry":"...","competitorUrls":["https://apple.com"],"notes":"Inspiration only — create a distinct identity."}'
+   ```
 
-```bash
-# Read full admin view
-curl -s -H "Authorization: Bearer $ORACLE_SITE_TOKEN" "$ORACLE_SITE_API/admin/design"
+## Presets
 
-# Update specific tokens (merged into the profile)
-curl -s -X PATCH "$ORACLE_SITE_API/admin/design" \
-  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
-  -d '{"tokens": {"colors": {"primary": "#174f7a", "accent": "#b85c38"}}}'
+| preset | vibe | hero | mode |
+|---|---|---|---|
+| `minimal` | Apple-inspired, calm & premium | centered | light |
+| `bold-dark` | Tesla-inspired, dramatic | fullbleed | dark |
+| `editorial` | warm, friendly (default) | split | light |
 
-# Generate a fresh profile for an industry (uses competitor URLs as references only)
-curl -s -X POST "$ORACLE_SITE_API/admin/design/generate" \
-  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
-  -d '{"industry": "accounting", "competitorUrls": ["https://a.example","https://b.example"], "notes": "Distinct identity, not a copy."}'
+## Section variants
 
-# Feed observed competitor signals to inform a distinct profile
-curl -s -X POST "$ORACLE_SITE_API/admin/design/analyze-competitors" \
-  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
-  -d '{
-    "industry": "retail",
-    "competitorUrls": ["https://shop.example"],
-    "observations": [{"url":"https://shop.example","colors":["#a6422b"],"fonts":["Nunito Sans"],"layoutNotes":"warm, product-forward"}],
-    "notes": "Use category conventions, create a distinct identity."
-  }'
-```
+- `hero`: `split` · `centered` · `fullbleed`
+- `features`: `cards` · `minimal`
+- `cta`: `banner`
+- hero/cta `content`: `kicker, headline, subhead, cta{label,href}, secondaryCta`; features `content`: `heading, items[]{icon,title,body}` (icons: sparkles, mail, shield, gauge, layers, zap, book, cloud).
 
-Never copy a competitor's exact brand — infer category conventions and produce a distinct profile.
+## Reference library
+
+Mapped in `backend/app/data/style_references.json`:
+apple / notion / stripe → **minimal** · tesla / linear → **bold-dark** · airbnb → **editorial**.
+
+## Rules
+- **Inspiration only — never clone a brand's exact identity or assets.**
+- Keep it legible (contrast, spacing). Never hardcode styles in components — everything flows through this API → CSS variables.
+- When the user is vague, propose options and confirm before applying a big visual change.

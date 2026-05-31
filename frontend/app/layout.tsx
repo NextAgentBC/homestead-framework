@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./providers";
 import { getDesign, getSite, getPages } from "@/lib/api";
@@ -10,6 +10,8 @@ import { SiteNav } from "@/components/nav";
 // so render dynamically per request instead of statically prerendering at build.
 // This also keeps the build from prerendering routes that fetch the API.
 export const dynamic = "force-dynamic";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSite();
@@ -35,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const [site, design, pages] = await Promise.all([getSite(), getDesign(), getPages()]);
   const navPages = pages.filter((page) => page.showInNav).map((page) => ({ slug: page.slug, navLabel: page.navLabel }));
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body style={designCssVariables(design)}>
         <AuthProvider>
           <div className="shell">

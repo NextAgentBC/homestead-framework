@@ -37,6 +37,22 @@ export type SitePage = {
   publishedAt?: string | null;
 };
 
+export type SectionCta = { label: string; href: string };
+
+export type Section = {
+  type: string;
+  variant?: string;
+  content?: {
+    kicker?: string;
+    headline?: string;
+    subhead?: string;
+    cta?: SectionCta;
+    secondaryCta?: SectionCta;
+    heading?: string;
+    items?: { icon?: string; title?: string; body?: string }[];
+  };
+};
+
 export type DesignProfile = {
   name: string;
   source: string;
@@ -78,6 +94,7 @@ export type DesignProfile = {
     tone: string;
   };
   notes: string;
+  sections?: Section[];
 };
 
 export const fallbackDesign: DesignProfile = {
@@ -99,8 +116,8 @@ export const fallbackDesign: DesignProfile = {
       link: "#356b9f"
     },
     typography: {
-      body: "Arial, Helvetica, sans-serif",
-      heading: "Arial, Helvetica, sans-serif",
+      body: "var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      heading: "var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
     },
     radius: {
@@ -120,7 +137,8 @@ export const fallbackDesign: DesignProfile = {
     headlineStyle: "plain offer or brand name",
     tone: "practical and calm"
   },
-  notes: "Fallback design profile."
+  notes: "Fallback design profile.",
+  sections: []
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
@@ -164,7 +182,7 @@ export async function getSite(): Promise<Site> {
 
 export async function getPosts(): Promise<BlogPost[]> {
   try {
-    const data = await fetchJson<{ items: BlogPost[] }>("/blogs");
+    const data = await fetchJson<{ items: BlogPost[] }>("/blogs", { cache: "no-store" });
     return data.items;
   } catch {
     return [];
@@ -173,7 +191,8 @@ export async function getPosts(): Promise<BlogPost[]> {
 
 export async function getDesign(): Promise<DesignProfile> {
   try {
-    const data = await fetchJson<{ item: DesignProfile }>("/design");
+    // no-store: applying a style preset / editing the design must reflect immediately.
+    const data = await fetchJson<{ item: DesignProfile }>("/design", { cache: "no-store" });
     return data.item;
   } catch {
     return fallbackDesign;

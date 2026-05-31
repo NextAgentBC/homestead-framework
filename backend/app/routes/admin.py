@@ -9,7 +9,7 @@ from ..extensions import db
 from ..models import BlogPost, DesignProfile, Page
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
-from ..services.design_service import deep_merge, normalized_profile, profile_for_industry
+from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
 
 bp = Blueprint("admin", __name__)
 
@@ -129,6 +129,8 @@ def update_design():
         profile.voice = deep_merge(profile.voice or {}, data["voice"])
     if "notes" in data:
         profile.notes = data["notes"]
+    if "sections" in data and isinstance(data["sections"], list):
+        profile.sections = data["sections"]
 
     normalized = normalized_profile(profile.to_dict(), profile.industry or current_app.config["SITE_INDUSTRY"])
     profile.tokens = normalized["tokens"]
@@ -141,11 +143,14 @@ def update_design():
 @require_auth(admin=True)
 def generate_design():
     data = request.get_json(silent=True) or {}
-    generated = profile_for_industry(
-        data.get("industry") or current_app.config["SITE_INDUSTRY"],
-        data.get("competitorUrls") or [],
-    )
-    generated["source"] = "generated-from-industry-and-competitors"
+    preset = data.get("preset") or data.get("style")
+    generated = apply_style(preset) if preset else None
+    if not generated:
+        generated = profile_for_industry(
+            data.get("industry") or current_app.config["SITE_INDUSTRY"],
+            data.get("competitorUrls") or [],
+        )
+        generated["source"] = "generated-from-industry-and-competitors"
     if data.get("notes"):
         generated["notes"] = data["notes"]
 
@@ -156,12 +161,13 @@ def generate_design():
 
     profile.name = generated["name"]
     profile.source = generated["source"]
-    profile.industry = generated["industry"]
-    profile.personality = generated["personality"]
-    profile.competitor_urls = generated["competitorUrls"]
+    profile.industry = generated.get("industry") or current_app.config["SITE_INDUSTRY"]
+    profile.personality = generated.get("personality", "")
+    profile.competitor_urls = generated.get("competitorUrls", [])
     profile.tokens = generated["tokens"]
     profile.voice = generated["voice"]
-    profile.notes = generated["notes"]
+    profile.notes = generated.get("notes", "")
+    profile.sections = generated.get("sections") or []
     db.session.commit()
     return {"item": profile.to_dict()}
 

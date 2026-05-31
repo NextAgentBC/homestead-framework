@@ -1,0 +1,12 @@
+{
+  "note": "Curated style references for the design skill. Inspiration signals only — never clone a brand's exact identity or assets.",
+  "families": ["minimal", "bold-dark", "editorial"],
+  "references": [
+    {"site": "apple.com",  "family": "minimal",   "hero": "centered",  "vibe": "calm, spacious, premium",          "palette": {"bg": "#fbfbfd", "ink": "#1d1d1f", "accent": "#0a6cff"}, "notes": "Huge type, generous whitespace, restrained color, product-forward."},
+    {"site": "notion.so",  "family": "minimal",   "hero": "centered",  "vibe": "friendly, clean, approachable",     "palette": {"bg": "#ffffff", "ink": "#191919", "accent": "#0a85ff"}, "notes": "Whitespace, simple type, light illustration."},
+    {"site": "stripe.com", "family": "minimal",   "hero": "split",     "vibe": "polished, gradient-accented, trustworthy", "palette": {"bg": "#ffffff", "ink": "#0a2540", "accent": "#635bff"}, "notes": "Angled gradients, crisp type, developer-clean."},
+    {"site": "tesla.com",  "family": "bold-dark", "hero": "fullbleed", "vibe": "dramatic, high-contrast, confident", "palette": {"bg": "#0c0f16", "ink": "#f4f6fb", "accent": "#e23b3b"}, "notes": "Full-bleed imagery, dark, short bold copy, dual CTAs."},
+    {"site": "linear.app", "family": "bold-dark", "hero": "centered",  "vibe": "sleek, dark, focused",               "palette": {"bg": "#0b0c10", "ink": "#f7f8f8", "accent": "#5e6ad2"}, "notes": "Dark, tight type, subtle glow, minimal chrome."},
+    {"site": "airbnb.com", "family": "editorial", "hero": "split",     "vibe": "warm, friendly, photo-led",          "palette": {"bg": "#ffffff", "ink": "#222222", "accent": "#ff385c"}, "notes": "Rounded, warm, imagery + search-forward."}
+  ]
+}
