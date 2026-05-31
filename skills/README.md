@@ -28,12 +28,16 @@ export ORACLE_SITE_TOKEN="$(docker compose -f /home/ubuntu/projects/oracle-site/
 
 ## Activate
 
-**OpenClaw (Telegram agent)** auto-discovers skills in `~/.openclaw/workspace/skills/` — symlink, no config edit:
+OpenClaw **rejects symlinks that escape its skills root** (`symlink-escape`), so **install** these as real directories (re-run with `--force` after editing a skill):
 
 ```bash
 for d in "$(git rev-parse --show-toplevel)"/skills/oracle-site-*/; do
-  ln -sfn "$d" "$HOME/.openclaw/workspace/skills/$(basename "$d")"
+  openclaw skills install "$d" --force
 done
+openclaw skills check                          # confirm each shows "ready"
+systemctl --user restart openclaw-gateway      # gateway snapshots skills at startup
 ```
 
-**Codex CLI** (optional) reads `~/.codex/skills/` — same symlink pattern into that dir.
+The repo is the source of truth; `install` copies them into `~/.openclaw/workspace/skills/`. Re-install after edits.
+
+**Codex CLI** (optional) reads `~/.codex/skills/` — copy the dirs there too if you use the Codex CLI.

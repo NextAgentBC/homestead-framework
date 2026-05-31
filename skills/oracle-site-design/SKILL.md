@@ -18,6 +18,19 @@ Design has two layers, both in the active design profile, both render **instantl
 - **Theme** — `tokens` (colors / fonts / radius / spacing).
 - **Composition** — `sections`: an ordered list of `hero`, `features`, `cta`, each with a **variant**.
 
+## Quick recipes (skip the interview when the ask is clear)
+
+**Tesla-style dark** ("改成 Tesla 风" / "make it dark and bold"):
+```bash
+# 1) bold-dark preset → dark theme + full-bleed hero composition
+curl -s -X POST "$ORACLE_SITE_API/admin/design/generate" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" -d '{"preset":"bold-dark"}' >/dev/null
+# 2) push to near-black + exact Tesla red (tokens merge; sections kept)
+curl -s -X PATCH "$ORACLE_SITE_API/admin/design" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" -d '{"tokens":{"colors":{"paper":"#050505","surface":"#111111","ink":"#ffffff","line":"#262626","primary":"#e82127","accent":"#e82127","link":"#ff5a5f"}}}' >/dev/null
+# 3) verify
+curl -s "$ORACLE_SITE_API/design" | grep -o '"paper":"#050505"' && curl -s -o /dev/null -w "site %{http_code}\n" https://oracle.nextagent.ca
+```
+Other one-liners: `{"preset":"minimal"}` (Apple-style light) · `{"preset":"editorial"}` (warm default). All instant, no redeploy.
+
 ## Run this as a conversation
 
 1. **Understand the taste.** If the user names a reference site or a vibe, map it (see Reference library). If unclear, ask up to 3 short questions: business/industry? a reference site or feeling (minimal / bold / warm / professional)? light or dark?
