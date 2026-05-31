@@ -11,6 +11,7 @@
     "/health": { "get": { "summary": "Health check" } },
     "/site": { "get": { "summary": "Public site config" } },
     "/design": { "get": { "summary": "Public active design profile" } },
+    "/blocks": { "get": { "summary": "Public block catalog: typed-block library (types, variants, fields, defaults, icons)" } },
     "/auth/google": { "post": { "summary": "Google signup/login" } },
     "/blogs": { "get": { "summary": "List published blog posts" } },
     "/blogs/{slug}": { "get": { "summary": "Get published blog post" } },
@@ -30,9 +31,23 @@
       "get": { "summary": "Get active design profile" },
       "patch": { "summary": "Update active design profile tokens" }
     },
-    "/admin/design/generate": { "post": { "summary": "Generate design profile from industry and competitor URLs" } },
+    "/admin/design/generate": { "post": { "summary": "Generate design profile from industry and competitor URLs, or apply a style preset" } },
     "/admin/design/analyze-competitors": {
       "post": { "summary": "Analyze competitor websites and update active design profile" }
+    },
+    "/admin/compose/{target}/blocks": {
+      "get": { "summary": "List blocks on a page (target = 'home' or a page slug)" },
+      "post": { "summary": "Add a block (type, variant, content, position)" }
+    },
+    "/admin/compose/{target}/blocks/{blockId}": {
+      "patch": { "summary": "Update a block (variant and/or content; content deep-merges)" },
+      "delete": { "summary": "Remove a block" }
+    },
+    "/admin/compose/{target}/blocks/{blockId}/move": {
+      "post": { "summary": "Move a block (position: start | end | index | after:<id> | before:<id>)" }
+    },
+    "/admin/compose/{target}/blocks/{blockId}/duplicate": {
+      "post": { "summary": "Duplicate a block" }
     }
   }
 }

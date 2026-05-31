@@ -10,6 +10,7 @@ from ..models import BlogPost, DesignProfile, Page
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
 from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
+from ..services import block_service
 
 bp = Blueprint("admin", __name__)
 
@@ -205,6 +206,145 @@ def analyze_design_competitors():
     profile.notes = generated["notes"]
     db.session.commit()
     return {"item": profile.to_dict(), "analysis": generated["analysis"]}
+
+
+# --- Block composition (manifest-driven, granular page editing) -------------
+# Edit any page's block list ("home" = active design profile, or a page slug)
+# one block at a time, by stable id. Pure logic lives in block_service.
+
+def _resolve_surface(target: str):
+    """Return (kind, obj, sections) for 'home' (active design profile) or a page
+    slug. kind is 'home' | 'page' | None (not found)."""
+    if target == "home":
+        profile = _active_design_profile()
+        if profile is None:
+            preset = profile_for_industry(current_app.config["SITE_INDUSTRY"])
+            profile = DesignProfile(
+                name=preset["name"], status="active", source=preset["source"],
+                industry=preset["industry"], personality=preset["personality"],
+                competitor_urls=preset["competitorUrls"], tokens=preset["tokens"],
+                voice=preset["voice"], notes=preset["notes"], sections=preset.get("sections") or [],
+            )
+            db.session.add(profile)
+            db.session.flush()
+        return "home", profile, list(profile.sections or [])
+    page = Page.query.filter_by(slug=target).first()
+    if page is None:
+        return None, None, None
+    return "page", page, list(page.sections or [])
+
+
+def _save_surface(obj, sections):
+    # JSON column is plain (no mutation tracking) — reassign to persist.
+    obj.sections = sections
+    db.session.commit()
+
+
+def _surface_payload(kind, obj, sections):
+    return {"target": "home" if kind == "home" else obj.slug, "blocks": block_service.summarize(sections)}
+
+
+def _surface_404(target):
+    return jsonify({"error": {"code": "not_found", "message": f"No editable page for target '{target}'."}}), 404
+
+
+def _block_404(target, block_id):
+    return jsonify({"error": {"code": "not_found", "message": f"No block '{block_id}' on '{target}'."}}), 404
+
+
+@bp.get("/compose/<target>/blocks")
+@require_auth(admin=True)
+def compose_list(target):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    if block_service.ensure_ids(sections):
+        _save_surface(obj, sections)
+    return {"item": _surface_payload(kind, obj, sections)}
+
+
+@bp.post("/compose/<target>/blocks")
+@require_auth(admin=True)
+def compose_add(target):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    data = request.get_json(silent=True) or {}
+    block_service.ensure_ids(sections)
+    try:
+        block = block_service.add_block(
+            sections, data.get("type"), data.get("variant"), data.get("content"), data.get("position", "end")
+        )
+    except block_service.BlockError as exc:
+        return jsonify({"error": {"code": "bad_request", "message": str(exc)}}), 400
+    _save_surface(obj, sections)
+    return {"item": block, "page": _surface_payload(kind, obj, sections)}, 201
+
+
+@bp.patch("/compose/<target>/blocks/<block_id>")
+@require_auth(admin=True)
+def compose_update(target, block_id):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    block_service.ensure_ids(sections)
+    if block_service.find_index(sections, block_id) < 0:
+        return _block_404(target, block_id)
+    data = request.get_json(silent=True) or {}
+    try:
+        block = block_service.update_block(
+            sections, block_id, data.get("variant"), data.get("content"), bool(data.get("replaceContent", False))
+        )
+    except block_service.BlockError as exc:
+        return jsonify({"error": {"code": "bad_request", "message": str(exc)}}), 400
+    _save_surface(obj, sections)
+    return {"item": block, "page": _surface_payload(kind, obj, sections)}
+
+
+@bp.post("/compose/<target>/blocks/<block_id>/move")
+@require_auth(admin=True)
+def compose_move(target, block_id):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    block_service.ensure_ids(sections)
+    if block_service.find_index(sections, block_id) < 0:
+        return _block_404(target, block_id)
+    data = request.get_json(silent=True) or {}
+    try:
+        block = block_service.move_block(sections, block_id, data.get("position", "end"))
+    except block_service.BlockError as exc:
+        return jsonify({"error": {"code": "bad_request", "message": str(exc)}}), 400
+    _save_surface(obj, sections)
+    return {"item": block, "page": _surface_payload(kind, obj, sections)}
+
+
+@bp.post("/compose/<target>/blocks/<block_id>/duplicate")
+@require_auth(admin=True)
+def compose_duplicate(target, block_id):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    block_service.ensure_ids(sections)
+    if block_service.find_index(sections, block_id) < 0:
+        return _block_404(target, block_id)
+    block = block_service.duplicate_block(sections, block_id)
+    _save_surface(obj, sections)
+    return {"item": block, "page": _surface_payload(kind, obj, sections)}, 201
+
+
+@bp.delete("/compose/<target>/blocks/<block_id>")
+@require_auth(admin=True)
+def compose_remove(target, block_id):
+    kind, obj, sections = _resolve_surface(target)
+    if kind is None:
+        return _surface_404(target)
+    block_service.ensure_ids(sections)
+    if block_service.find_index(sections, block_id) < 0:
+        return _block_404(target, block_id)
+    removed = block_service.remove_block(sections, block_id)
+    _save_surface(obj, sections)
+    return {"item": {"id": block_id, "type": removed.get("type"), "deleted": True}, "page": _surface_payload(kind, obj, sections)}
 
 
 RESERVED_SLUGS = {"blog", "blogs", "contact", "api", "admin", "_next"}

@@ -10,6 +10,7 @@ from ..auth import issue_jwt, upsert_google_user, verify_google_token
 from ..extensions import db
 from ..models import BlogPost, DesignProfile, NewsletterSubscription, Page
 from ..services.design_service import DEFAULT_DESIGN_PROFILE, normalized_profile
+from ..services import block_service
 from ..services.email_service import send_email
 
 bp = Blueprint("public", __name__)
@@ -41,6 +42,15 @@ def design():
     if not profile:
         return {"item": DEFAULT_DESIGN_PROFILE}
     return {"item": normalized_profile(profile.to_dict(), profile.industry or current_app.config["SITE_INDUSTRY"])}
+
+
+@bp.get("/blocks")
+def blocks_catalog():
+    """Public block catalog — the typed-block library a page can be composed from.
+    Lets an agent (or a future visual editor) discover types, variants, fields,
+    defaults, and the icon vocabulary, then validate before composing."""
+    items = block_service.manifest()
+    return {"items": items, "icons": block_service.ICONS, "meta": {"count": len(items)}}
 
 
 @bp.get("/openapi.json")

@@ -23,7 +23,7 @@ def test_analyzer_uses_observation_tokens_and_ignores_bad_colors():
     assert profile["source"] == "competitor-analyzer"
     assert profile["tokens"]["colors"]["primary"] == "#a6422b"
     assert profile["tokens"]["typography"]["body"].startswith("Nunito Sans")
-    assert profile["tokens"]["layout"]["heroMinHeight"] == "60vh"
+    assert profile["tokens"]["layout"]["heroMinHeight"] == "66vh"
 
 
 def test_normalized_profile_fills_missing_design_tokens():
