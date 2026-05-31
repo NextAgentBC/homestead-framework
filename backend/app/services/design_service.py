@@ -2,6 +2,26 @@ from copy import deepcopy
 from typing import Optional
 
 
+DEFAULT_STATS_SECTION = {
+    "type": "stats",
+    "content": {
+        "items": [
+            {"value": "Daily", "label": "Fresh content"},
+            {"value": "1-click", "label": "Publish"},
+            {"value": "100%", "label": "Yours to own"},
+            {"value": "SEO", "label": "Built in"},
+        ]
+    },
+}
+
+DEFAULT_LOGOS_SECTION = {
+    "type": "logos",
+    "content": {
+        "heading": "Built with",
+        "items": [{"label": "Next.js"}, {"label": "Flask"}, {"label": "PostgreSQL"}, {"label": "Cloudflare"}],
+    },
+}
+
 DEFAULT_SECTIONS = [
     {
         "type": "hero",
@@ -14,6 +34,8 @@ DEFAULT_SECTIONS = [
             "secondaryCta": {"label": "Contact", "href": "/contact"},
         },
     },
+    DEFAULT_STATS_SECTION,
+    DEFAULT_LOGOS_SECTION,
     {
         "type": "features",
         "variant": "cards",
@@ -204,7 +226,9 @@ STYLE_PRESETS = {
         },
         "voice": {"headlineStyle": "short, bold, benefit-led", "tone": "calm and premium"},
         "sections": [
-            {"type": "hero", "variant": "centered", "content": {"kicker": "", "headline": "", "subhead": "Clean, fast, and made to last.", "cta": {"label": "Get started", "href": "/contact"}, "secondaryCta": {"label": "Read the blog", "href": "/blog"}}},
+            {"type": "hero", "variant": "centered", "content": {"badge": "Premium by default", "headline": "Clean, fast,", "headlineAccent": "made to last.", "subhead": "A refined site that loads fast and stays out of the way.", "cta": {"label": "Get started", "href": "/contact"}, "secondaryCta": {"label": "Read the blog", "href": "/blog"}}},
+            DEFAULT_STATS_SECTION,
+            DEFAULT_LOGOS_SECTION,
             {"type": "features", "variant": "minimal", "content": {"heading": "Why us", "items": [
                 {"icon": "gauge", "title": "Fast", "body": "Built for speed and clarity."},
                 {"icon": "layers", "title": "Refined", "body": "Considered design, no clutter."},
@@ -226,7 +250,9 @@ STYLE_PRESETS = {
         },
         "voice": {"headlineStyle": "bold, declarative", "tone": "confident and bold"},
         "sections": [
-            {"type": "hero", "variant": "fullbleed", "content": {"kicker": "", "headline": "", "subhead": "Power, presence, performance.", "cta": {"label": "Explore", "href": "/blog"}, "secondaryCta": {"label": "Contact", "href": "/contact"}}},
+            {"type": "hero", "variant": "fullbleed", "content": {"badge": "Bold by design", "headline": "Power. Presence.", "headlineAccent": "Performance.", "subhead": "A dramatic, high-contrast presence that commands attention.", "cta": {"label": "Explore", "href": "/blog"}, "secondaryCta": {"label": "Contact", "href": "/contact"}}},
+            DEFAULT_STATS_SECTION,
+            DEFAULT_LOGOS_SECTION,
             {"type": "features", "variant": "minimal", "content": {"heading": "Built different", "items": [
                 {"icon": "zap", "title": "Bold", "body": "High-contrast, hard to ignore."},
                 {"icon": "gauge", "title": "Fast", "body": "Performance you can feel."},

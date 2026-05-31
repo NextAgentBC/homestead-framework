@@ -44,12 +44,14 @@ export type Section = {
   variant?: string;
   content?: {
     kicker?: string;
+    badge?: string;
     headline?: string;
+    headlineAccent?: string;
     subhead?: string;
     cta?: SectionCta;
     secondaryCta?: SectionCta;
     heading?: string;
-    items?: { icon?: string; title?: string; body?: string }[];
+    items?: { icon?: string; title?: string; body?: string; value?: string; label?: string }[];
   };
 };
 

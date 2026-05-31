@@ -39,12 +39,19 @@ function HeroActions({ cta, secondaryCta }: { cta?: SectionCta; secondaryCta?: S
 function Hero({ section, site }: { section: Section; site: Site }) {
   const c = section.content ?? {};
   const variant = section.variant || "split";
-  const kicker = c.kicker || site.industry;
   const headline = c.headline || site.name;
   const copy = (
     <div className="hero-copy">
-      {kicker && <p className="kicker">{kicker}</p>}
-      <h1>{headline}</h1>
+      {c.badge ? <span className="hero-badge">{c.badge}</span> : c.kicker ? <p className="kicker">{c.kicker}</p> : <p className="kicker">{site.industry}</p>}
+      <h1>
+        {headline}
+        {c.headlineAccent && (
+          <>
+            <br />
+            <span className="accent-text">{c.headlineAccent}</span>
+          </>
+        )}
+      </h1>
       {c.subhead && <p className="lede">{c.subhead}</p>}
       <HeroActions cta={c.cta} secondaryCta={c.secondaryCta} />
     </div>
@@ -55,6 +62,39 @@ function Hero({ section, site }: { section: Section; site: Site }) {
     <section className="hero hero-split">
       {copy}
       <div className="hero-visual" aria-hidden="true" />
+    </section>
+  );
+}
+
+function Stats({ section }: { section: Section }) {
+  const items = section.content?.items ?? [];
+  if (!items.length) return null;
+  return (
+    <section className="stats">
+      {items.map((item, index) => (
+        <div className="stat" key={index}>
+          <span className="stat-value">{item.value}</span>
+          <span className="stat-label">{item.label}</span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function Logos({ section }: { section: Section }) {
+  const c = section.content ?? {};
+  const items = c.items ?? [];
+  if (!items.length) return null;
+  return (
+    <section className="logos">
+      {c.heading && <p className="logos-heading">{c.heading}</p>}
+      <div className="logos-row">
+        {items.map((item, index) => (
+          <span className="logo-chip" key={index}>
+            {item.label}
+          </span>
+        ))}
+      </div>
     </section>
   );
 }
@@ -101,6 +141,8 @@ export function SectionRenderer({ sections, site }: { sections: Section[]; site:
     <>
       {sections.map((section, index) => {
         if (section.type === "hero") return <Hero section={section} site={site} key={index} />;
+        if (section.type === "stats") return <Stats section={section} key={index} />;
+        if (section.type === "logos") return <Logos section={section} key={index} />;
         if (section.type === "features") return <Features section={section} key={index} />;
         if (section.type === "cta") return <Cta section={section} key={index} />;
         return null;

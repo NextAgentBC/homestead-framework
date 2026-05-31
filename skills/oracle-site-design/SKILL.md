@@ -59,12 +59,15 @@ Design has two layers, both in the active design profile, both render **instantl
 | `bold-dark` | Tesla-inspired, dramatic | fullbleed | dark |
 | `editorial` | warm, friendly (default) | split | light |
 
-## Section variants
+## Modules (section types — compose a page by ordering these in `sections`)
 
-- `hero`: `split` · `centered` · `fullbleed`
-- `features`: `cards` · `minimal`
-- `cta`: `banner`
-- hero/cta `content`: `kicker, headline, subhead, cta{label,href}, secondaryCta`; features `content`: `heading, items[]{icon,title,body}` (icons: sparkles, mail, shield, gauge, layers, zap, book, cloud).
+- `hero` — `split` · `centered` · `fullbleed`. content: `badge` (pill), `kicker`, `headline`, `headlineAccent` (gradient-highlighted line), `subhead`, `cta{label,href}`, `secondaryCta`.
+- `stats` — KPI bar. content: `items[]{value,label}`.
+- `logos` — trust / tech strip. content: `heading`, `items[]{label}`.
+- `features` — `cards` · `minimal`. content: `heading`, `items[]{icon,title,body}` (icons: sparkles, mail, shield, gauge, layers, zap, book, cloud).
+- `cta` — `banner`. content: `headline`, `subhead`, `cta{label,href}`.
+
+A strong landing order: **hero → stats → logos → features → cta**.
 
 ## Reference library
 
