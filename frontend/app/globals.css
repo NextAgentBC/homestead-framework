@@ -606,3 +606,50 @@ a.post-card .button.ghost { margin-top: 4px; justify-self: start; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; scroll-behavior: auto !important; }
 }
+
+
+/* ===== Design-y pass: stronger type, contrast band, rhythm ===== */
+.hero h1 { font-size: clamp(46px, 7.4vw, 92px); letter-spacing: -0.04em; line-height: 0.98; }
+.hero-split { max-width: 1000px; }
+.hero-badge { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Distinctive display font for the corporate (Meridian) template */
+[data-theme="corporate"] h1,
+[data-theme="corporate"] h2,
+[data-theme="corporate"] h3,
+[data-theme="corporate"] .stat-value,
+[data-theme="corporate"] .price-value { font-family: var(--font-grotesk), var(--font-sans), sans-serif; }
+[data-theme="corporate"] h1 { letter-spacing: -0.045em; }
+
+.section h2 { font-size: clamp(30px, 4.4vw, 52px); letter-spacing: -0.03em; }
+
+/* Stats as one divided bar, not four loose cards */
+.stats { gap: 0; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--edge); border-radius: var(--radius-card); overflow: hidden; background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.stat { border: 0; border-right: 1px solid var(--edge); border-radius: 0; box-shadow: none; padding: clamp(20px, 2.6vw, 32px); gap: 8px; }
+.stat:last-child { border-right: 0; }
+.stat-value { font-size: clamp(32px, 4.4vw, 50px); }
+
+/* The high-contrast moment: a dramatic dark CTA band */
+.cta-banner { color: #f6f9ff; border: 0; background: radial-gradient(80% 150% at 100% 0%, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 60%), linear-gradient(135deg, #0e1322, #0b0f1a); box-shadow: var(--shadow-lg); }
+.cta-banner .cta-copy h2 { color: #f6f9ff; }
+.cta-banner .lede { color: rgba(246, 249, 255, 0.78); }
+.cta-banner .button, .cta-banner .button.secondary { background: #ffffff; color: #0b0f1a; box-shadow: none; }
+.cta-banner .button:hover { background: #eef2fa; transform: translateY(-1.5px); }
+
+/* Comparison as one unified table; featured column is the clear winner */
+.compare { gap: 0; border: 1px solid var(--edge); border-radius: var(--radius-card); overflow: hidden; }
+.compare-col { border: 0; border-radius: 0; box-shadow: none; }
+.compare-col + .compare-col { border-left: 1px solid var(--edge); }
+.compare-col.featured { background: linear-gradient(180deg, var(--tint), var(--color-surface)); }
+
+/* Pricing: lift the recommended tier */
+.price-card.featured { transform: translateY(-8px); }
+.feature > svg:first-child, .post-card > svg:first-child { padding: 12px; border-radius: 14px; }
+
+@media (max-width: 820px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: 0; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--edge); }
+  .compare-col + .compare-col { border-left: 0; border-top: 1px solid var(--edge); }
+  .price-card.featured { transform: none; }
+}
