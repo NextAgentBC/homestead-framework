@@ -116,7 +116,13 @@ h1, h2, h3 { font-family: var(--font-heading); letter-spacing: -0.022em; font-we
 .hero-centered .hero-copy { max-width: min(900px, 92vw); margin: 0 auto; }
 .hero-centered .lede { margin-left: auto; margin-right: auto; }
 .hero-centered .hero-actions { justify-content: center; }
-.hero-centered h1 { max-width: none; }
+.hero-centered h1 { max-width: none; font-size: clamp(36px, 5vw, 64px); line-height: 1.07; }
+.hero-centered .lede { max-width: 56ch; }
+.hero-centered::before {
+  inset: -6% 0 auto 0;
+  height: 68%;
+  background: radial-gradient(46% 60% at 50% 4%, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 72%);
+}
 .hero-visual {
   min-height: 340px;
   border-radius: calc(var(--radius-card) + 6px);
@@ -159,6 +165,10 @@ h1, h2, h3 { font-family: var(--font-heading); letter-spacing: -0.022em; font-we
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  display: inline-block;
+  font-size: 0.66em;
+  line-height: 1.1;
+  margin-top: 0.12em;
 }
 
 /* stats (KPI bar) */
