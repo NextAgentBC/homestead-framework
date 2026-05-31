@@ -35,6 +35,7 @@ export type SitePage = {
   canonicalUrl?: string;
   status?: string;
   publishedAt?: string | null;
+  sections?: Section[];
 };
 
 export type SectionCta = { label: string; href: string };

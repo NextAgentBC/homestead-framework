@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { getPage } from "@/lib/api";
+import { getPage, getSite } from "@/lib/api";
+import { SectionRenderer } from "@/components/sections";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -22,6 +23,16 @@ export default async function ContentPage({ params }: PageProps) {
   const { slug } = await params;
   const page = await getPage(slug);
   if (!page) notFound();
+
+  // Module-composed page (like the home), or a simple markdown page.
+  if (page.sections && page.sections.length > 0) {
+    const site = await getSite();
+    return (
+      <main className="main">
+        <SectionRenderer sections={page.sections} site={site} />
+      </main>
+    );
+  }
 
   return (
     <main className="main">

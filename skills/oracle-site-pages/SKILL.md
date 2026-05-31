@@ -54,7 +54,25 @@ curl -s -X DELETE "$ORACLE_SITE_API/admin/pages/<id>" \
   -H "Authorization: Bearer $ORACLE_SITE_TOKEN"
 ```
 
+## Module-composed pages (landing pages)
+
+A page can be built from **design modules** (hero, features, pricing, faq, cta…) — the same modules as the home — instead of markdown. Pass `sections` instead of `body_markdown`; see `../oracle-site-design/SKILL.md` for the module catalog and content shapes.
+
+```bash
+curl -s -X POST "$ORACLE_SITE_API/admin/pages" \
+  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{
+    "title": "Services", "slug": "services", "status": "published", "nav_label": "Services",
+    "sections": [
+      {"type":"hero","variant":"centered","content":{"badge":"What we offer","headline":"Services","headlineAccent":"that scale.","subhead":"...","cta":{"label":"Contact","href":"/contact"}}},
+      {"type":"pricing","content":{"heading":"Plans","items":[{"name":"Basic","price":"$X","features":["..."],"cta":{"label":"Start","href":"/contact"}}]}},
+      {"type":"faq","content":{"heading":"FAQ","items":[{"q":"...","a":"..."}]}}
+    ]
+  }'
+```
+
 Notes:
+- A page uses `sections` if present, otherwise `body_markdown`. Provide one of them.
 - `body_markdown` is the content **below** the heading — the page renders `title` as the `<h1>` automatically, so don't repeat it as a leading `# Title` (avoids a duplicate heading).
 - Create requires `title` + `body_markdown`. `slug` auto-derives from title if omitted; duplicates get `-2`, `-3`.
 - Reserved slugs (`blog`, `contact`, `api`, `admin`, …) are rejected — taken by built-in routes.

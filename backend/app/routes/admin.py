@@ -215,7 +215,8 @@ def _create_page(data: dict, publish: bool) -> Page:
     page = Page(
         title=data["title"],
         slug=_unique_slug(data.get("slug") or data["title"], model=Page),
-        body_markdown=data["body_markdown"],
+        body_markdown=data.get("body_markdown", ""),
+        sections=data.get("sections") or [],
         status=status,
         nav_label=data.get("nav_label", ""),
         nav_order=int(data.get("nav_order", 100)),
@@ -234,8 +235,8 @@ def _create_page(data: dict, publish: bool) -> Page:
 @require_auth(admin=True)
 def create_page():
     data = request.get_json(silent=True) or {}
-    if not data.get("title") or not data.get("body_markdown"):
-        return jsonify({"error": {"code": "bad_request", "message": "title and body_markdown are required"}}), 400
+    if not data.get("title") or (not data.get("body_markdown") and not data.get("sections")):
+        return jsonify({"error": {"code": "bad_request", "message": "title and (body_markdown or sections) are required"}}), 400
     if slugify(data.get("slug") or data["title"]) in RESERVED_SLUGS:
         return jsonify({"error": {"code": "bad_request", "message": "slug is reserved"}}), 400
     page = _create_page(data, publish=data.get("status") == "published")
@@ -249,7 +250,7 @@ def update_page(page_id: int):
     if not page:
         return jsonify({"error": {"code": "not_found", "message": "Page not found"}}), 404
     data = request.get_json(silent=True) or {}
-    for key in ["title", "body_markdown", "status", "nav_label", "nav_order", "show_in_nav", "meta_title", "meta_description"]:
+    for key in ["title", "body_markdown", "sections", "status", "nav_label", "nav_order", "show_in_nav", "meta_title", "meta_description"]:
         if key in data:
             setattr(page, key, data[key])
     if data.get("status") == "published" and not page.published_at:
