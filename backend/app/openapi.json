@@ -67,6 +67,13 @@
     },
     "/admin/i18n/{locale}": {
       "patch": { "summary": "Edit UI chrome strings for a locale (merges; {replace:true} overwrites)" }
+    },
+    "/admin/media": {
+      "get": { "summary": "List hosted images (filename, url, bytes)" },
+      "post": { "summary": "Upload an image to host (multipart file, or JSON {url} to fetch, or {data} base64); returns its /api/media/<file> URL. Upload-only — no generation." }
+    },
+    "/admin/media/{filename}": {
+      "delete": { "summary": "Delete a hosted image" }
     }
   }
 }

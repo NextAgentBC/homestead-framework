@@ -41,9 +41,9 @@ r=c.get("/api/blogs");            chk("GET /blogs (empty)", r.status_code==200 a
 r=c.get("/api/pages");            chk("GET /pages (empty)", r.status_code==200, str(r.status_code))
 r=c.get("/api/blogs/nope");       chk("GET /blogs/<missing>->404", r.status_code==404, str(r.status_code))
 
-# media: write a file, serve it
-os.makedirs("/tmp/media_audit", exist_ok=True)
-open("/tmp/media_audit/t.png","wb").write(b"\x89PNG\r\n\x1a\n"+b"0"*32)
+# media serve: drop a file into the configured MEDIA_DIR, serve it
+_MEDIA=app.config["MEDIA_DIR"]; os.makedirs(_MEDIA, exist_ok=True)
+open(os.path.join(_MEDIA,"t.png"),"wb").write(b"\x89PNG\r\n\x1a\n"+b"0"*32)
 r=c.get("/api/media/t.png");      chk("GET /media/<file>", r.status_code==200, str(r.status_code))
 r=c.get("/api/media/missing.png");chk("GET /media/<missing>->404", r.status_code==404, str(r.status_code))
 
@@ -99,6 +99,20 @@ r=c.delete(f"/api/admin/patterns/{patid}", headers=H); chk("DELETE /admin/patter
 r=c.patch("/api/admin/i18n/zh", json={"messages":{"nav.blog":"博客"}}, headers=H); chk("PATCH /admin/i18n/zh", r.status_code==200, str(r.status_code))
 r=c.get("/api/i18n/zh"); chk("i18n reflects write", r.status_code==200 and j(r)["item"]["messages"].get("nav.blog")=="博客", str(r.status_code))
 r=c.patch("/api/admin/i18n/fr", json={"messages":{}}, headers=H); chk("i18n bad locale -> 400", r.status_code==400, str(r.status_code))
+
+# ---------- ADMIN: media upload (upload-only image hosting) ----------
+import io as _io, base64 as _b64
+_PNG=b"\x89PNG\r\n\x1a\n"+b"0"*64
+r=c.post("/api/admin/media", data={"file":(_io.BytesIO(_PNG),"My Shot.png")}, content_type="multipart/form-data", headers=H)
+murl=j(r).get("item",{}).get("url",""); mname=j(r).get("item",{}).get("filename",""); chk("POST /admin/media (multipart, absolute url)", r.status_code==201 and "/api/media/" in murl and murl.endswith(".png") and murl.startswith("http"), str(r.status_code))
+r=c.get(f"/api/media/{mname}"); chk("uploaded image is served", r.status_code==200, str(r.status_code))
+r=c.post("/api/admin/media", json={"data":_b64.b64encode(_PNG).decode(),"filename":"inline.png"}, headers=H); chk("POST /admin/media (base64)", r.status_code==201 and j(r)["item"]["url"].endswith(".png"), str(r.status_code))
+r=c.post("/api/admin/media", json={"data":_b64.b64encode(b"not an image").decode()}, headers=H); chk("POST /admin/media non-image -> 400", r.status_code==400, str(r.status_code))
+r=c.post("/api/admin/media", json={}, headers=H); chk("POST /admin/media empty -> 400", r.status_code==400, str(r.status_code))
+r=c.post("/api/admin/media", data={"file":(_io.BytesIO(_PNG),"x.png")}, content_type="multipart/form-data"); chk("POST /admin/media no token -> 401", r.status_code==401, str(r.status_code))
+r=c.get("/api/admin/media", headers=H); chk("GET /admin/media (list)", r.status_code==200 and any(i["filename"]==mname for i in j(r).get("items",[])), str(r.status_code))
+r=c.delete(f"/api/admin/media/{mname}", headers=H); chk("DELETE /admin/media/<file>", r.status_code==200, str(r.status_code))
+r=c.delete("/api/admin/media/missing.png", headers=H); chk("DELETE /admin/media/<missing> -> 404", r.status_code==404, str(r.status_code))
 
 # ---------- cleanup write ----------
 r=c.delete(f"/api/admin/pages/{pid}", headers=H); chk("DELETE /admin/pages/{id}", r.status_code==200, str(r.status_code))

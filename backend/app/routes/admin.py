@@ -1,9 +1,15 @@
+import base64
+import os
+import secrets
+import urllib.parse
+import urllib.request
 from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Optional
 
 from flask import Blueprint, current_app, jsonify, request
 from slugify import slugify
+from werkzeug.utils import secure_filename
 
 from ..auth import require_auth
 from ..extensions import db
@@ -628,3 +634,132 @@ def update_ui_messages(locale: str):
     row.messages = merged
     db.session.commit()
     return {"item": row.to_dict()}
+
+
+# --- media: user-uploaded images (hosting only — no generation) --------------
+#
+# Accepts an image three ways so it works from any client (incl. a Telegram bot):
+#   • multipart/form-data with a `file` field        (curl -F "file=@photo.png")
+#   • JSON {"url": "https://…"}                       (fetch & store a remote image)
+#   • JSON {"data": "<base64>", "filename": "x.png"}  (inline bytes; data: URLs ok)
+# Bytes are sniffed by magic number, so a lying extension can't smuggle a
+# non-image through and we only ever host raster images.
+
+_IMAGE_SNIFF = (  # (magic-byte test, canonical extension)
+    (lambda b: b[:8] == b"\x89PNG\r\n\x1a\n", "png"),
+    (lambda b: b[:3] == b"\xff\xd8\xff", "jpg"),
+    (lambda b: b[:6] in (b"GIF87a", b"GIF89a"), "gif"),
+    (lambda b: b[:4] == b"RIFF" and b[8:12] == b"WEBP", "webp"),
+)
+_MEDIA_CT = {"png": "image/png", "jpg": "image/jpeg", "gif": "image/gif", "webp": "image/webp"}
+
+
+def _sniff_image_ext(data: bytes):
+    for test, ext in _IMAGE_SNIFF:
+        try:
+            if test(data):
+                return ext
+        except Exception:
+            pass
+    return None
+
+
+def _media_error(msg, status=400, code="bad_request"):
+    return jsonify({"error": {"code": code, "message": msg}}), status
+
+
+@bp.post("/media")
+@require_auth(admin=True)
+def upload_media():
+    """Host a user-uploaded image (no generation). Returns its /api/media/<file>
+    URL, ready to drop into a gallery/team/hero block or a blog hero_image_url."""
+    max_bytes = current_app.config["MEDIA_MAX_MB"] * 1024 * 1024
+    raw = None
+    hint_name = None  # caller's suggested filename, if any
+
+    file = request.files.get("file")
+    if file is not None:
+        raw = file.read()
+        hint_name = file.filename
+    else:
+        data = request.get_json(silent=True) or {}
+        if data.get("url"):
+            url = str(data["url"]).strip()
+            if not url.lower().startswith(("http://", "https://")):
+                return _media_error("url must be http(s)")
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "oracle-site-media/1.0"})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    raw = resp.read(max_bytes + 1)
+            except Exception as exc:
+                return _media_error(f"could not fetch url: {exc}")
+            hint_name = os.path.basename(urllib.parse.urlparse(url).path) or None
+        elif data.get("data"):
+            b64 = str(data["data"])
+            if b64.lstrip().startswith("data:") and "," in b64:
+                b64 = b64.split(",", 1)[1]  # strip a data: URL prefix
+            try:
+                raw = base64.b64decode(b64, validate=False)
+            except Exception:
+                return _media_error("data is not valid base64")
+            hint_name = data.get("filename")
+        else:
+            return _media_error("provide a multipart `file`, or JSON {url} or {data}")
+
+    if not raw:
+        return _media_error("empty upload")
+    if len(raw) > max_bytes:
+        return _media_error(
+            f"image too large ({len(raw) // 1024} KB); limit is {current_app.config['MEDIA_MAX_MB']} MB",
+            413, "payload_too_large")
+
+    ext = _sniff_image_ext(raw)
+    if ext is None:
+        return _media_error("not a supported image (png, jpg, gif, webp only)")
+
+    base = os.path.splitext(secure_filename(hint_name or "image"))[0][:48].strip("-_.") or "image"
+    name = f"{base}-{secrets.token_hex(4)}.{ext}"
+    media_dir = current_app.config["MEDIA_DIR"]
+    os.makedirs(media_dir, exist_ok=True)
+    with open(os.path.join(media_dir, name), "wb") as fh:
+        fh.write(raw)
+
+    # Absolute URL (the frontend host has no /api proxy, so an <img src> must point
+    # at the API host). `path` is the relative form for any same-origin use.
+    return jsonify({"item": {
+        "filename": name,
+        "url": f"{current_app.config['API_PUBLIC_URL']}/api/media/{name}",
+        "path": f"/api/media/{name}",
+        "bytes": len(raw),
+        "contentType": _MEDIA_CT[ext],
+    }}), 201
+
+
+@bp.get("/media")
+@require_auth(admin=True)
+def list_media():
+    """List hosted images (name, URL, size) so the agent can reuse what's already uploaded."""
+    media_dir = current_app.config["MEDIA_DIR"]
+    base = current_app.config["API_PUBLIC_URL"]
+    items = []
+    if os.path.isdir(media_dir):
+        for name in sorted(os.listdir(media_dir)):
+            path = os.path.join(media_dir, name)
+            if os.path.isfile(path) and not name.startswith("."):
+                items.append({"filename": name, "url": f"{base}/api/media/{name}",
+                              "path": f"/api/media/{name}", "bytes": os.path.getsize(path)})
+    return {"items": items}
+
+
+@bp.delete("/media/<path:filename>")
+@require_auth(admin=True)
+def delete_media(filename: str):
+    """Delete a hosted image by filename."""
+    safe = secure_filename(filename)
+    if not safe:
+        return _media_error("bad filename")
+    path = os.path.join(current_app.config["MEDIA_DIR"], safe)
+    if not os.path.isfile(path):
+        return _media_error("file not found", 404, "not_found")
+    os.remove(path)
+    return {"item": {"filename": safe, "deleted": True}}

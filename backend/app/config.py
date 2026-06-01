@@ -37,7 +37,12 @@ class Config:
     SITE_DEFAULT_LOCALE = os.getenv("SITE_DEFAULT_LOCALE", "") or SITE_LOCALES[0]
 
     # Self-hosted media (blog images, etc.), served at /api/media/<file> from a volume.
+    # Upload-only (no generation): POST /api/admin/media stores user images here.
     MEDIA_DIR = os.getenv("MEDIA_DIR", "/app/media")
+    MEDIA_MAX_MB = int(os.getenv("MEDIA_MAX_MB", "10"))
+    # Caps request bodies (Flask 413s past this). Headroom over MEDIA_MAX_MB so a
+    # full-size image still fits when sent base64-encoded (~33% larger) or multipart.
+    MAX_CONTENT_LENGTH = (int(os.getenv("MEDIA_MAX_MB", "10")) * 4 // 3 + 2) * 1024 * 1024
 
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
     ADMIN_EMAILS = set(_csv(os.getenv("ADMIN_EMAILS", "")))

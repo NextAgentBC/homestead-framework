@@ -101,8 +101,16 @@ If the site has a `zh` locale, add the section in both languages in one go: inse
 (default locale), then repeat the `add` with `?locale=zh` and translated `content`. See
 `../oracle-site-i18n/SKILL.md`.
 
+## Capture vs. upload (route the user's image correctly)
+This skill is for **replicating a layout** you *see* in a screenshot — rebuilt in the site's
+tokens, never hosting the shot. If instead the user wants to **display a real photo as-is**
+(a headshot, product/food shot, a blog image), that's an **upload**, not a capture — host it
+via `../oracle-site-media/SKILL.md` and put the returned `/api/media/<file>` URL into a
+gallery / team / testimonial / `section` `media` item or a `body_markdown` image.
+
 ## Rules
 - Harmonize, don't clone. No raw colors in `section` payloads — tokens do that.
+- A real *photo to show* is an upload (`../oracle-site-media/SKILL.md`), not a capture.
 - Prefer a real semantic block over `section` when the shot clearly *is* one (pricing, FAQ…).
 - Discover before you write (`/blocks`, the target's block list). Read `error.message` and retry.
 - A brand-new *coded* block type is still a code change; `section` + patterns cover the no-redeploy path.

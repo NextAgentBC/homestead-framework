@@ -26,9 +26,10 @@ to the matching skill** for whatever they pick — don't re-implement, route.
 - **/oracle_site_blog** — 写 / 生成 / 发布 / 改博客 · write, generate, publish, edit posts
 - **/oracle_site_pages** — 新建 / 修改页面(关于、服务、隐私…)· create & edit pages
 - **/oracle_site_newsletter** — 订阅者 / 联系表单 · newsletter & contact form
+- **/oracle_site_media** — 上传图片 → 用到图库 / 团队 / 博客 · upload a photo, use it on the site
 
 ## 🎨 设计 · Design
-- **/oracle_site_design** — 换模板(共 12 套)/ 改配色 / 改字体 / 改 hero · templates · colors · fonts
+- **/oracle_site_design** — 换模板(共 18 套)/ 改配色 / 改字体 / 改 hero · templates · colors · fonts
 - **/oracle_site_capture** — 发一张截图 → 自动重建成板块(同化成本站风格)· screenshot → section
 - **/oracle_site_compose** — 给某页加 / 改 / 移 / 删 / 复制板块 · add·edit·move·remove blocks
 
