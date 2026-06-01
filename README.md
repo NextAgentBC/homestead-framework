@@ -1,7 +1,8 @@
-# Oracle Site Framework
+# Homestead
 
-> Runs in production as **Homestead** — an "Elementor, but driven entirely by chat (OpenClaw/Codex)"
-> website framework. Everything is **design tokens + composable blocks**, with zero hard-coded CSS.
+> **Homestead** — an "Elementor, but driven entirely by chat (OpenClaw/Codex)" website framework.
+> Everything is **design tokens + composable blocks**, with zero hard-coded CSS.
+> (Internal identifiers — repo dirs, services, the `oracle-site` DB, the `oracle-site-*` skills — keep the original `oracle-site` codename; only the product name is Homestead.)
 > Categorized capability map (APIs · fonts · 18 themes · 15 blocks · skills): [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
 
 This README is written for a student's local Codex agent.
@@ -9,7 +10,7 @@ This README is written for a student's local Codex agent.
 Canonical repository:
 
 ```text
-https://github.com/NextAgentBC/oracle-site-framework
+https://github.com/NextAgentBC/homestead-framework
 ```
 
 Your human is taking a lecture where every student has:

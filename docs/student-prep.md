@@ -1,6 +1,6 @@
 # 课前预习 · Student Pre-Lecture Prep
 
-> Beginner onboarding for the Oracle Site Framework. Complete this **before** the lecture so class time goes to building, not account signups and DNS waits.
+> Beginner onboarding for **Homestead** (the website framework). Complete this **before** the lecture so class time goes to building, not account signups and DNS waits.
 
 ## 怎么用这份文档
 

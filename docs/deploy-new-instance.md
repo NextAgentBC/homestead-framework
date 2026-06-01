@@ -15,7 +15,7 @@ the only external pieces are an `edge` Docker network and public ingress (a Clou
 ## 1. Clone
 
 ```bash
-git clone https://github.com/NextAgentBC/oracle-site-framework.git homestead
+git clone https://github.com/NextAgentBC/homestead-framework.git homestead
 cd homestead
 ```
 
