@@ -18,7 +18,7 @@ Telegram command). This is the **categorized front door**: when the user sends
 menu below (trim to what's relevant, keep it bilingual and short), then **delegate
 to the matching skill** for whatever they pick — don't re-implement, route.
 
-> Live site: **oracle.nextagent.ca** · API: **oracle-api.nextagent.ca**. Any change
+> Live site: **homestead.nextagent.ca** · API: **homestead-api.nextagent.ca**. Any change
 > needs `../oracle-site-shared/SKILL.md` for `$ORACLE_SITE_API` + `$ORACLE_SITE_TOKEN`.
 > All edits are **instant, no redeploy** (except a brand-new coded block type).
 

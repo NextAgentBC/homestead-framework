@@ -28,9 +28,9 @@ live catalog by `generate-block-skills.py` — they delegate to `oracle-site-com
 ## Configure
 
 ```bash
-export ORACLE_SITE_API="https://oracle-api.nextagent.ca/api"
+export ORACLE_SITE_API="https://homestead-api.nextagent.ca/api"
 export ORACLE_SITE_TOKEN="$(docker compose -f /home/ubuntu/projects/oracle-site/docker-compose.yml \
-  exec -T backend flask --app app.main token issue --email you@example.com)"
+  exec -T backend flask --app app.main token issue)"   # no --email → uses the configured admin
 ```
 
 ## Activate

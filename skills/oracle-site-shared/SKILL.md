@@ -32,10 +32,12 @@ Admin routes require `Authorization: Bearer <jwt>`. Two ways to get one:
 
 ```bash
 export ORACLE_SITE_TOKEN="$(docker compose -f /home/ubuntu/projects/oracle-site/docker-compose.yml \
-  exec -T backend flask --app app.main token issue --email you@example.com)"
+  exec -T backend flask --app app.main token issue)"
 ```
 
-The email must be in the backend's `ADMIN_EMAILS`. `--days N` overrides lifetime (default 168h).
+With **no `--email`** it uses the first `ADMIN_EMAILS` entry (the admin) — most robust. Pass
+`--email <x>` only if `x` is actually in the backend's `ADMIN_EMAILS`, else it's rejected.
+`--days N` overrides lifetime (default 168h).
 
 ## Conventions
 

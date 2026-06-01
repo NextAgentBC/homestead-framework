@@ -27,7 +27,7 @@ curl -s -X POST "$ORACLE_SITE_API/admin/design/generate" -H "Authorization: Bear
 # 2) push to near-black + exact Tesla red (tokens merge; sections kept)
 curl -s -X PATCH "$ORACLE_SITE_API/admin/design" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" -d '{"tokens":{"colors":{"paper":"#050505","surface":"#111111","ink":"#ffffff","line":"#262626","primary":"#e82127","accent":"#e82127","link":"#ff5a5f"}}}' >/dev/null
 # 3) verify
-curl -s "$ORACLE_SITE_API/design" | grep -o '"paper":"#050505"' && curl -s -o /dev/null -w "site %{http_code}\n" https://oracle.nextagent.ca
+curl -s "$ORACLE_SITE_API/design" | grep -o '"paper":"#050505"' && curl -s -o /dev/null -w "site %{http_code}\n" https://homestead.nextagent.ca
 ```
 Other one-liners: `{"preset":"minimal"}` (Aurora, light) · `{"preset":"editorial"}` (Atelier, warm serif) · `{"preset":"corporate"}` (Meridian, B2B navy) · plus eight industry templates — `tech` · `healthcare` · `restaurant` · `realestate` · `fitness` · `beauty` · `legal` · `creative` (see the Presets table). Or skip the preset and pass `{"industry":"dental"|"gym"|"law"|…}` to auto-pick one. All instant, no redeploy.
 
