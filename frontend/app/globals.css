@@ -538,7 +538,7 @@ a.post-card .button.ghost { margin-top: 4px; justify-self: start; }
   line-height: 1.78;
   padding: clamp(28px, 5vw, 64px);
   box-shadow: var(--shadow-md);
-  max-width: 74ch;
+  max-width: var(--layout-content-max);   /* track the site's wide/narrow width token (was a fixed 74ch) */
   margin: 0 auto;
 }
 .article h1 { font-size: clamp(34px, 5vw, 56px); line-height: 1.06; margin-top: 0; letter-spacing: -0.03em; }
