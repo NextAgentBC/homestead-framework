@@ -1,5 +1,9 @@
 # Oracle Site Framework
 
+> Runs in production as **Homestead** — an "Elementor, but driven entirely by chat (OpenClaw/Codex)"
+> website framework. Everything is **design tokens + composable blocks**, with zero hard-coded CSS.
+> Categorized capability map (APIs · fonts · 18 themes · 15 blocks · skills): [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
+
 This README is written for a student's local Codex agent.
 
 Canonical repository:
@@ -31,7 +35,12 @@ Build a reusable full-stack website framework:
 - Backend: Python Flask API.
 - Database: PostgreSQL.
 - Auth: Google Sign-In.
-- Content: blog + newsletter.
+- Content: blog + newsletter + standalone pages.
+- Composition: every page (and the home) is an ordered list of **blocks** (15 types) edited by API — add/move/edit/remove/duplicate, instant, no redeploy.
+- Theming: **18 one-shot style presets** (base + industry + style), all token-driven; switch with one call.
+- Media: **upload-only** image hosting used by gallery/team/blog (`/api/admin/media`).
+- i18n: path-based `/zh`, the agent is the translator.
+- Capture: rebuild a section from a screenshot into the flexible `section` block + a reusable pattern library.
 - UI/UX: API-driven design profile, not hard-coded theme values.
 - Automation: daily AI-generated blog posts.
 - Delivery: Cloudflare Tunnel preferred, static IP + Nginx fallback.
@@ -174,32 +183,33 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 
 ## API Contract
 
-Public:
+Machine-readable source of truth: `GET /api/openapi.json`. A categorized human map
+(APIs · fonts · 18 themes · 15 blocks · skill↔API) lives in [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
 
-- `GET /api/health`
-- `GET /api/site`
-- `GET /api/design`
-- `GET /api/openapi.json`
-- `POST /api/auth/google`
-- `GET /api/blogs`
-- `GET /api/blogs/:slug`
-- `POST /api/newsletter/subscribe`
-- `POST /api/contact`
+Public (no token):
 
-Admin:
+- `GET /api/health` · `GET /api/site` · `GET /api/design` (`?locale=`) · `GET /api/openapi.json`
+- `GET /api/blocks` — block catalog (types, variants, fields, icons)
+- `GET /api/patterns` · `GET /api/patterns/:slug` — saved section patterns
+- `GET /api/i18n/:locale` — UI chrome strings · `GET /api/media/:filename` — self-hosted images
+- `GET /api/blogs` (`?locale=`) · `GET /api/blogs/:slug`
+- `GET /api/pages` (`?locale=`) · `GET /api/pages/:slug`
+- `POST /api/auth/google` · `POST /api/newsletter/subscribe` · `POST /api/contact`
 
-- `POST /api/admin/blogs/generate`
-- `POST /api/admin/blogs`
-- `PATCH /api/admin/blogs/:id`
-- `GET /api/admin/design`
-- `PATCH /api/admin/design`
-- `POST /api/admin/design/generate`
-- `POST /api/admin/design/analyze-competitors`
+Admin (`Authorization: Bearer <jwt>`):
 
-Admin requests require:
+- **Design** — `GET|PATCH /api/admin/design` · `POST /api/admin/design/generate` · `POST /api/admin/design/analyze-competitors`
+- **Blogs** — `POST /api/admin/blogs` · `PATCH /api/admin/blogs/:id` · `POST /api/admin/blogs/generate`
+- **Pages** — `POST /api/admin/pages` · `PATCH|DELETE /api/admin/pages/:id`
+- **Compose** (block-level page editing) — `GET /api/admin/surfaces` · `GET|POST /api/admin/compose/:target/blocks` · `PATCH|DELETE …/blocks/:id` · `POST …/blocks/:id/move` · `…/duplicate` · `POST /api/admin/compose/:target/batch`
+- **Patterns** — `POST /api/admin/patterns` · `DELETE /api/admin/patterns/:id`
+- **i18n** — `PATCH /api/admin/i18n/:locale`
+- **Media** (upload-only) — `GET|POST /api/admin/media` · `DELETE /api/admin/media/:filename`
 
-```text
-Authorization: Bearer <jwt-from-google-login>
+Get a non-interactive admin token (runs where the backend runs):
+
+```bash
+flask --app app.main token issue --email you@example.com
 ```
 
 ## UI/UX Personalization
