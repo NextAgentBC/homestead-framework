@@ -257,7 +257,8 @@ export async function getDesign(locale?: string): Promise<DesignProfile> {
 
 export async function getPost(slug: string, locale?: string): Promise<BlogPost | null> {
   try {
-    const data = await fetchJson<{ item: BlogPost }>(`/blogs/${slug}${localeQuery(locale)}`);
+    // no-store: editing/translating a post must reflect immediately (matches getPage/getPosts).
+    const data = await fetchJson<{ item: BlogPost }>(`/blogs/${slug}${localeQuery(locale)}`, { cache: "no-store" });
     return data.item;
   } catch {
     return null;
