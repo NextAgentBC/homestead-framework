@@ -29,11 +29,23 @@ curl -s "$ORACLE_SITE_API/health"          # app readiness
 
 ```bash
 docker compose up -d --build               # redeploy after code/env changes (rebuilds images)
-docker compose restart backend             # or frontend — restart one service
+docker restart tunnel-cloudflared          # REQUIRED after any recreate (see below)
+docker compose restart backend             # or frontend — restart one service (keeps the IP, no tunnel restart needed)
 ```
+
+**Cloudflare tunnel gotcha — always restart cloudflared after a recreate.** The
+infra tunnel routes `homestead.* / homestead-api.*` to the `oracle-site-frontend /
+-backend` aliases on the `edge` network. When `up -d --build` (or `up -d`)
+**recreates** a container it gets a new IP, but cloudflared caches the old one and
+returns **502/530** until it re-resolves. So after any recreate, run
+`docker restart tunnel-cloudflared` (briefly blips other tunneled apps too) and
+re-check the public URL. A plain `restart` (not recreate) keeps the IP — no tunnel
+restart needed.
 
 Rules:
 - Read-only commands (`ps`, `logs`, health): run freely.
 - `up --build` / `restart` / anything that stops or rebuilds: confirm first.
 - Never run `down`, `rm`, or delete volumes from this skill.
-- After a redeploy, verify: `docker compose ps` + `curl -s "$ORACLE_SITE_API/health"`.
+- After a redeploy: `docker restart tunnel-cloudflared`, then verify `docker compose ps`
+  + `curl -fsS https://homestead.nextagent.ca/en` (the **public** URL, not just local health —
+  local 200 doesn't prove the tunnel works).
