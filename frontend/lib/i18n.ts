@@ -70,7 +70,7 @@ const EN: Messages = {
   "footer.more": "More",
   "footer.blog": "Blog",
   "footer.contact": "Contact",
-  "footer.tagline": "{industry} site built on the Oracle Site framework — Next.js, Flask, Cloudflare.",
+  "footer.tagline": "{industry} site built on the Homestead framework — Next.js, Flask, Cloudflare.",
   "meta.blog": "Blog",
   "meta.contact": "Contact"
 };
@@ -115,7 +115,7 @@ const ZH: Messages = {
   "footer.more": "更多",
   "footer.blog": "博客",
   "footer.contact": "联系",
-  "footer.tagline": "基于 Oracle Site 框架构建的{industry}网站 —— Next.js、Flask、Cloudflare。",
+  "footer.tagline": "基于 Homestead 框架构建的{industry}网站 —— Next.js、Flask、Cloudflare。",
   "meta.blog": "博客",
   "meta.contact": "联系"
 };
