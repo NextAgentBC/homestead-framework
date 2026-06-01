@@ -202,7 +202,17 @@ def generate_design():
     profile.industry = generated.get("industry") or current_app.config["SITE_INDUSTRY"]
     profile.personality = generated.get("personality", "")
     profile.competitor_urls = generated.get("competitorUrls", [])
-    profile.tokens = generated["tokens"]
+    # Content width is a global preference, not a per-theme aesthetic: keep the user's current
+    # contentMaxWidth when switching themes (robust), unless they pass {width|contentMaxWidth}.
+    _WIDTHS = {"narrow": "1040px", "standard": "1160px", "wide": "1280px",
+               "full": "1440px", "extra-wide": "1440px", "extrawide": "1440px"}
+    _prev_w = ((profile.tokens or {}).get("layout") or {}).get("contentMaxWidth")
+    _new_tokens = generated["tokens"]
+    _want = data.get("width") or data.get("contentMaxWidth")
+    _chosen = _WIDTHS.get(str(_want).strip().lower(), _want) if _want else _prev_w
+    if _chosen:
+        _new_tokens.setdefault("layout", {})["contentMaxWidth"] = _chosen
+    profile.tokens = _new_tokens
     profile.voice = generated["voice"]
     profile.notes = generated.get("notes", "")
     profile.sections = generated.get("sections") or []

@@ -129,6 +129,8 @@ curl -s -X PATCH "$ORACLE_SITE_API/admin/design" -H "Authorization: Bearer $ORAC
   -d '{"tokens":{"layout":{"contentMaxWidth":"1280px"}}}'
 # 窄一点 → "1040px"；全宽 → "1440px"。其它布局 token 同理：sectionGap(段间距) · cardPadding · heroMinHeight · density。
 ```
+> 换主题(`generate {preset}`)**默认保留当前宽度**——宽度是全局偏好,不会被主题重置。想换主题同时改宽度:`generate {"preset":"minimal","width":"wide"}`(width 接受 narrow/standard/wide/full 或具体 px)。
+
 Hero 和长文本各自有可读上限（文字不会被拉太宽），这个 token 只管**整体页面容器**的宽度。
 
 ## Rules
