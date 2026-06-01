@@ -5,6 +5,10 @@
 > (Internal identifiers — repo dirs, services, the `oracle-site` DB, the `oracle-site-*` skills — keep the original `oracle-site` codename; only the product name is Homestead.)
 > Categorized capability map (APIs · fonts · 18 themes · 15 blocks · skills): [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
 
+> 🤖 **Deploying with an AI agent?** Hand it **[`AGENT-DEPLOY.md`](AGENT-DEPLOY.md)** — a headless,
+> idempotent, self-verifying runbook: clone → env → build → Cloudflare tunnel **via API** → verify.
+> No dashboard. The human provides a server + domain + a Cloudflare API token; the agent does the rest.
+
 This README is written for a student's local Codex agent.
 
 Canonical repository:
