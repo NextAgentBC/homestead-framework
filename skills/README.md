@@ -38,7 +38,11 @@ export ORACLE_SITE_TOKEN="$(docker compose -f /home/ubuntu/projects/oracle-site/
 OpenClaw **rejects symlinks that escape its skills root** (`symlink-escape`), so **install** these as real directories (re-run with `--force` after editing a skill):
 
 ```bash
-for d in "$(git rev-parse --show-toplevel)"/skills/*/; do   # all skill dirs (oracle-site-* + website)
+# Core website skills (each becomes a Telegram command). The per-block trigger
+# skills (oracle-site-block-*) are OPTIONAL — compose/capture already cover every
+# block type, so they're skipped by default to keep the command menu clean.
+for d in "$(git rev-parse --show-toplevel)"/skills/*/; do
+  case "$d" in */oracle-site-block-*/) continue ;; esac
   openclaw skills install "$d" --force
 done
 openclaw skills check                          # confirm each shows "ready"
@@ -46,8 +50,9 @@ systemctl --user restart openclaw-gateway      # gateway snapshots skills at sta
 ```
 
 OpenClaw auto-exposes every installed skill as a Telegram slash command
-(`oracle-site-blog` → `/oracle_site_blog`, `website` → `/website`). `/website` is
-the categorized front door — start there.
+(`oracle-site-blog` → `/oracle_site_blog`, `website` → `/website`). **`/website`**
+is the categorized front door — start there. Want per-block commands
+(`/oracle_site_block_pricing` …)? Install `skills/oracle-site-block-*` explicitly.
 
 The repo is the source of truth; `install` copies them into `~/.openclaw/workspace/skills/`. Re-install after edits.
 
