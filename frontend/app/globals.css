@@ -321,6 +321,16 @@ h2 { line-height: 1.1; }
     repeating-linear-gradient(90deg, transparent 0 32px, color-mix(in srgb, var(--color-ink-inverse) 4%, transparent) 32px 33px);
   mask-image: radial-gradient(70% 70% at 50% 30%, #000, transparent 75%);
 }
+/* Dark templates: the page is already dark, so boxing the hero as a separate dark
+   "card" just floats a redundant panel. Blend it into the page — keep the glow,
+   drop the shell (radius / shadow / grid / solid base). Light templates (e.g.
+   restaurant) keep the dramatic dark band. */
+[data-mode="dark"] .hero-fullbleed {
+  border-radius: 0;
+  box-shadow: none;
+  background: radial-gradient(85% 120% at 50% -8%, color-mix(in srgb, var(--color-primary) 40%, transparent), transparent 62%);
+}
+[data-mode="dark"] .hero-fullbleed::before { display: none; }
 .hero-fullbleed .hero-copy { position: relative; z-index: 1; max-width: min(820px, 90vw); margin: 0 auto; }
 .hero-fullbleed h1 { max-width: none; }
 .hero-fullbleed .eyebrow, .hero-fullbleed .kicker { color: color-mix(in srgb, var(--color-highlight) 85%, var(--color-ink-inverse)); }
