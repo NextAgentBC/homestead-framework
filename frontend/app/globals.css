@@ -1,7 +1,7 @@
 /* =====================================================================
    Oracle Site — design system
    Theme values (colors / fonts / radius / layout) arrive from the API as
-   inline CSS variables on <body>. This stylesheet adds the *expression*:
+   inline CSS variables on <html>. This stylesheet adds the *expression*:
    type scale, spacing rhythm, depth, components — all driven by those vars.
    Two adaptive axes:
      [data-mode="light|dark"]  → depth & surface treatment
@@ -275,7 +275,7 @@ h2 { line-height: 1.1; }
 }
 
 /* hero · split (copy + CSS-built product visual) */
-.hero-split { position: relative; display: block; text-align: center; max-width: 920px; margin: 0 auto; }
+.hero-split { position: relative; display: block; text-align: center; max-width: calc(var(--layout-content-max) * 0.82); margin: 0 auto; }
 .hero-split .hero-copy { max-width: none; }
 .hero-split h1 { max-width: 20ch; margin-inline: auto; }
 .hero-split .lede { margin-inline: auto; }
@@ -472,7 +472,7 @@ a.post-card .button.ghost { margin-top: 4px; justify-self: start; }
 .price-card .button { width: 100%; }
 
 /* ---------- FAQ ---------- */
-.faq { display: grid; max-width: 820px; }
+.faq { display: grid; max-width: calc(var(--layout-content-max) * 0.73); }
 .faq-item { border-bottom: 1px solid var(--edge); }
 .faq-item summary { cursor: pointer; font-weight: 620; font-size: 17px; padding: 18px 0; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .faq-item summary::-webkit-details-marker { display: none; }
@@ -519,7 +519,7 @@ a.post-card .button.ghost { margin-top: 4px; justify-self: start; }
 .textarea { min-height: 140px; resize: vertical; }
 
 /* ---------- Page header (blog index, contact, simple pages) ---------- */
-.page-header { display: grid; gap: 14px; max-width: 760px; margin: clamp(12px, 3vw, 32px) 0 clamp(32px, 5vw, 52px); }
+.page-header { display: grid; gap: 14px; max-width: calc(var(--layout-content-max) * 0.68); margin: clamp(12px, 3vw, 32px) 0 clamp(32px, 5vw, 52px); }
 .page-header h1 { font-size: clamp(36px, 5.4vw, 64px); line-height: 1.04; margin: 0; letter-spacing: -0.03em; }
 .page-header .lede { margin: 0; }
 
