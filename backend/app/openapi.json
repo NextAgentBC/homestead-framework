@@ -23,7 +23,9 @@
     "/pages/{slug}": { "get": { "summary": "Get published content page (accepts ?locale=)" } },
     "/page-templates": { "get": { "summary": "Page recipes — recommended block composition per page type (home/about/services/solutions/pricing/landing)" } },
     "/newsletter/subscribe": { "post": { "summary": "Subscribe to newsletter" } },
-    "/contact": { "post": { "summary": "Send contact message" } },
+    "/contact": { "post": { "summary": "Send contact message (also pings the operator on Telegram)" } },
+    "/chat": { "post": { "summary": "Website live chat — send a visitor message ({sessionId?, message, locale?}); answered by the sandboxed tool-less 小爪 brain. Returns {sessionId, reply}. Rate-limited." } },
+    "/chat/{sessionId}": { "get": { "summary": "Website live chat — full transcript for a session id" } },
     "/admin/blogs/generate": { "post": { "summary": "Generate AI blog post" } },
     "/admin/blogs": { "post": { "summary": "Create blog post" } },
     "/admin/blogs/{id}": { "patch": { "summary": "Update blog post" } },
@@ -75,6 +77,18 @@
     },
     "/admin/media/{filename}": {
       "delete": { "summary": "Delete a hosted image" }
+    },
+    "/admin/chat": {
+      "get": { "summary": "List website chat conversations (?status=open|closed, newest first)" }
+    },
+    "/admin/chat/{sessionId}": {
+      "get": { "summary": "Get a website chat transcript (admin)" }
+    },
+    "/admin/chat/{sessionId}/reply": {
+      "post": { "summary": "Reply into a website chat (operator take-over); {message} appears in the visitor's widget" }
+    },
+    "/admin/chat/{sessionId}/close": {
+      "post": { "summary": "Close (or {reopen:true}) a website chat conversation" }
     }
   }
 }

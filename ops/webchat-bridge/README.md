@@ -37,6 +37,18 @@ systemctl --user enable --now webchat-bridge.service
 curl -s http://127.0.0.1:18791/health     # {"ok":true,...}
 ```
 
+**Firewall (Oracle Cloud Ubuntu):** the default INPUT chain REJECTs traffic from the
+Docker bridge to host ports, so the backend container can't reach `:18791` until you allow it:
+
+```bash
+sudo iptables -C INPUT -s 172.16.0.0/12 -p tcp --dport 18791 -j ACCEPT 2>/dev/null \
+  || sudo iptables -I INPUT 2 -s 172.16.0.0/12 -p tcp --dport 18791 -j ACCEPT
+```
+
+This is re-applied on every boot by `/usr/local/bin/app-boot-heal.sh` (idempotent), so it
+survives reboots. Verify from the container: `docker compose exec backend python -c "import
+urllib.request; print(urllib.request.urlopen('http://host.docker.internal:18791/health').read())"`.
+
 `WEBCHAT_BRIDGE_TOKEN` must match `backend/.env` `WEBCHAT_BRIDGE_TOKEN`. Survives reboot via
 the user manager (requires `loginctl enable-linger ubuntu`, same as the gateway).
 

@@ -56,9 +56,10 @@ def run_model(prompt: str) -> str:
 def mirror_telegram(session: str, message: str, reply: str) -> None:
     if not (MIRROR and TG_TARGET):
         return
-    note = (f"🌐 网站访客 · {session[:8]}\n\n"
+    note = (f"🌐 网站访客\n"
             f"👤 {message[:600]}\n\n"
-            f"🤖 小爪：{reply[:1200]}")
+            f"🤖 小爪：{reply[:1200]}\n\n"
+            f"↩️ 接管回复用 session：{session}")
     subprocess.run(
         [OPENCLAW, "message", "send", "--channel", "telegram", "--target", TG_TARGET, "--message", note],
         capture_output=True, text=True, timeout=30,
