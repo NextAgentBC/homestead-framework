@@ -84,6 +84,11 @@ organized *by page*; pass `{"template":"<name>"}` and the page is composed for y
 | `solutions` | Solutions | hero · problem · features · steps · testimonials · cta |
 | `pricing` | Pricing | hero · pricing · comparison · faq · cta |
 | `landing` | Campaign landing | hero(fullbleed) · features · testimonials · pricing · cta |
+| `restaurant` | Restaurant / café | hero · features · gallery · testimonials · banner · cta |
+| `clinic` | Clinic / healthcare | hero · features · steps · team · faq · cta |
+| `law` | Law firm / advisory | hero · features · stats · testimonials · faq · cta |
+
+> Industry recipes pair well with the matching **theme** preset — e.g. scaffold `restaurant` + `generate {"preset":"restaurant"}` (see `../oracle-site-design`).
 
 ```bash
 curl -s "$ORACLE_SITE_API/page-templates"          # browse the recipes (public)
