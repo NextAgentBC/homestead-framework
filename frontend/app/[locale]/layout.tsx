@@ -6,6 +6,7 @@ import { AuthProvider } from "../providers";
 import { getDesign, getSite, getPages } from "@/lib/api";
 import { designCssVariables } from "@/lib/design";
 import { SiteNav } from "@/components/nav";
+import { ChatWidget } from "@/components/chat-widget";
 import { loadMessages, normalizeLocale, LOCALES, t } from "@/lib/i18n";
 import type { DesignProfile } from "@/lib/api";
 
@@ -104,6 +105,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               </div>
               <div className="footer-bottom">© {new Date().getFullYear()} {site.name}</div>
             </footer>
+            <ChatWidget locale={locale} messages={messages} />
           </div>
         </AuthProvider>
       </body>

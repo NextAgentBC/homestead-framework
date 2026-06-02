@@ -22,6 +22,9 @@ services:
     env_file: ./backend/.env
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-oracle_site}:${POSTGRES_PASSWORD:-oracle_site_password}@postgres:5432/${POSTGRES_DB:-oracle_site}
+    # Reach the host webchat-bridge (systemd --user service on :18791) for live chat.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
     volumes:

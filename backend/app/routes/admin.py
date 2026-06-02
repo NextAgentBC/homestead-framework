@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 
 from ..auth import require_auth
 from ..extensions import db
-from ..models import BlockPattern, BlogPost, DesignProfile, Page, UiMessages
+from ..models import BlockPattern, BlogPost, ChatConversation, ChatMessage, DesignProfile, Page, UiMessages
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
 from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
@@ -786,3 +786,70 @@ def delete_media(filename: str):
         return _media_error("file not found", 404, "not_found")
     os.remove(path)
     return {"item": {"filename": safe, "deleted": True}}
+
+
+# ---------------------------------------------------------------------------
+# Website live chat — operator console (review threads + take over).
+# ---------------------------------------------------------------------------
+
+def _chat_or_404(session_id: str):
+    return ChatConversation.query.filter_by(session_id=session_id).first()
+
+
+@bp.get("/chat")
+@require_auth(admin=True)
+def chat_list():
+    """List website chat conversations (newest activity first). ?status=open|closed."""
+    status = (request.args.get("status") or "").strip()
+    query = ChatConversation.query
+    if status:
+        query = query.filter_by(status=status)
+    convos = (
+        query.order_by(
+            ChatConversation.last_message_at.desc().nullslast(),
+            ChatConversation.created_at.desc(),
+        )
+        .limit(int(request.args.get("limit", "100")))
+        .all()
+    )
+    return {"items": [c.to_card_dict() for c in convos], "meta": {"count": len(convos)}}
+
+
+@bp.get("/chat/<session_id>")
+@require_auth(admin=True)
+def chat_detail(session_id: str):
+    convo = _chat_or_404(session_id)
+    if convo is None:
+        return jsonify({"error": {"code": "not_found", "message": f"No chat '{session_id}'."}}), 404
+    return {"item": convo.to_detail_dict()}
+
+
+@bp.post("/chat/<session_id>/reply")
+@require_auth(admin=True)
+def chat_operator_reply(session_id: str):
+    """Inject a human/小爪 reply into a web chat (take-over). It appears in the
+    visitor's widget on next poll and is included in the AI's future context."""
+    convo = _chat_or_404(session_id)
+    if convo is None:
+        return jsonify({"error": {"code": "not_found", "message": f"No chat '{session_id}'."}}), 404
+    data = request.get_json(silent=True) or {}
+    text = (data.get("message") or "").strip()
+    if not text:
+        return jsonify({"error": {"code": "bad_request", "message": "message is required"}}), 400
+    role = data.get("role") if data.get("role") in ("operator", "agent") else "operator"
+    msg = ChatMessage(conversation_id=convo.id, role=role, text=text[:4000])
+    db.session.add(msg)
+    convo.last_message_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return {"item": msg.to_dict(), "sessionId": convo.session_id}, 201
+
+
+@bp.post("/chat/<session_id>/close")
+@require_auth(admin=True)
+def chat_close(session_id: str):
+    convo = _chat_or_404(session_id)
+    if convo is None:
+        return jsonify({"error": {"code": "not_found", "message": f"No chat '{session_id}'."}}), 404
+    convo.status = "open" if (request.get_json(silent=True) or {}).get("reopen") else "closed"
+    db.session.commit()
+    return {"item": {"sessionId": convo.session_id, "status": convo.status}}

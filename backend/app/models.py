@@ -209,3 +209,68 @@ class BlockPattern(TimestampMixin, db.Model):
         item["spec"] = self.spec or {}
         item["notes"] = self.notes
         return item
+
+
+class ChatConversation(TimestampMixin, db.Model):
+    """One website chat thread, keyed by a browser-generated session id. The bot
+    brain is the (tool-less) OpenClaw model turn run by the host webchat-bridge;
+    this just persists the transcript + any captured lead so the operator can
+    review and take over from Telegram."""
+    __tablename__ = "chat_conversation"
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    status = db.Column(db.String(32), nullable=False, default="open")  # open | closed
+    locale = db.Column(db.String(16), nullable=False, default="")
+    visitor_name = db.Column(db.String(255), nullable=False, default="")
+    visitor_email = db.Column(db.String(255), nullable=False, default="")
+    last_message_at = db.Column(db.DateTime, nullable=True)
+    meta = db.Column(db.JSON, nullable=False, default=dict)  # {ua, referrer, page, ipHash}
+    messages = db.relationship(
+        "ChatMessage",
+        backref="conversation",
+        order_by="ChatMessage.id",
+        cascade="all, delete-orphan",
+    )
+
+    def to_card_dict(self) -> dict:
+        msgs = list(self.messages)
+        last = msgs[-1] if msgs else None
+        return {
+            "id": self.id,
+            "sessionId": self.session_id,
+            "status": self.status,
+            "locale": self.locale,
+            "visitorName": self.visitor_name,
+            "visitorEmail": self.visitor_email,
+            "messageCount": len(msgs),
+            "lastMessage": (last.text[:160] if last else ""),
+            "lastRole": (last.role if last else ""),
+            "lastMessageAt": self.last_message_at.isoformat() if self.last_message_at else None,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def to_detail_dict(self) -> dict:
+        item = self.to_card_dict()
+        item["messages"] = [m.to_dict() for m in self.messages]
+        item["meta"] = self.meta or {}
+        return item
+
+
+class ChatMessage(TimestampMixin, db.Model):
+    __tablename__ = "chat_message"
+
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(
+        db.Integer, db.ForeignKey("chat_conversation.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    role = db.Column(db.String(16), nullable=False, default="visitor")  # visitor | agent | operator
+    text = db.Column(db.Text, nullable=False, default="")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "role": self.role,
+            "text": self.text,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+        }

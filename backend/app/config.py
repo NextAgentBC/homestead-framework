@@ -59,3 +59,14 @@ class Config:
     SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+
+    # Website live chat — answered by the (tool-less) 小爪 brain on the host
+    # webchat-bridge, which also mirrors each exchange to the operator's Telegram.
+    WEBCHAT_ENABLED = os.getenv("WEBCHAT_ENABLED", "true").lower() == "true"
+    WEBCHAT_BRIDGE_URL = os.getenv("WEBCHAT_BRIDGE_URL", "").rstrip("/")
+    WEBCHAT_BRIDGE_TOKEN = os.getenv("WEBCHAT_BRIDGE_TOKEN", "")
+    WEBCHAT_TIMEOUT = int(os.getenv("WEBCHAT_TIMEOUT", "75"))      # bridge call (seconds)
+    WEBCHAT_MAX_MSG_CHARS = int(os.getenv("WEBCHAT_MAX_MSG_CHARS", "1500"))
+    WEBCHAT_RATE_PER_MIN = int(os.getenv("WEBCHAT_RATE_PER_MIN", "8"))     # visitor msgs/min/session
+    WEBCHAT_MAX_TURNS = int(os.getenv("WEBCHAT_MAX_TURNS", "120"))         # messages per conversation
+    WEBCHAT_HISTORY_TURNS = int(os.getenv("WEBCHAT_HISTORY_TURNS", "12"))  # turns of context sent

@@ -80,7 +80,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.path != "/chat":
+        if self.path not in ("/chat", "/notify"):
             return self._send(404, {"error": "not found"})
         if BRIDGE_TOKEN and self.headers.get("X-Bridge-Token") != BRIDGE_TOKEN:
             return self._send(401, {"error": "unauthorized"})
@@ -89,6 +89,24 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(length) or b"{}")
         except Exception:
             return self._send(400, {"error": "bad json"})
+
+        # /notify — mirror-only Telegram ping (no model turn); used by the contact form.
+        if self.path == "/notify":
+            text = (data.get("text") or "").strip()
+            if not text:
+                return self._send(400, {"error": "text required"})
+            ok = True
+            try:
+                if MIRROR and TG_TARGET:
+                    subprocess.run(
+                        [OPENCLAW, "message", "send", "--channel", "telegram",
+                         "--target", TG_TARGET, "--message", text[:3500]],
+                        capture_output=True, text=True, timeout=30,
+                    )
+            except Exception as exc:
+                ok = False
+                self.log_error("notify error: %s", str(exc)[:200])
+            return self._send(200, {"ok": ok})
 
         prompt = (data.get("prompt") or "").strip()
         session = (str(data.get("sessionId") or "anon"))[:64]

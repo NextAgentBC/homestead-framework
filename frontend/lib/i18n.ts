@@ -72,7 +72,16 @@ const EN: Messages = {
   "footer.contact": "Contact",
   "footer.tagline": "{industry} site built on the Homestead framework — Next.js, Flask, Cloudflare.",
   "meta.blog": "Blog",
-  "meta.contact": "Contact"
+  "meta.contact": "Contact",
+  "chat.title": "Chat with us",
+  "chat.open": "Open chat",
+  "chat.close": "Close chat",
+  "chat.greeting": "Hi! I'm 小爪, the site assistant. Ask me anything about what we do — or leave your email and we'll follow up.",
+  "chat.placeholder": "Type a message…",
+  "chat.send": "Send",
+  "chat.typing": "Assistant is typing",
+  "chat.error": "Sorry, something went wrong. Please try again, or leave your email and we'll reach out.",
+  "chat.rateLimited": "You're sending messages a bit fast — give it a moment 🙂"
 };
 
 const ZH: Messages = {
@@ -117,7 +126,16 @@ const ZH: Messages = {
   "footer.contact": "联系",
   "footer.tagline": "基于 Homestead 框架构建的{industry}网站 —— Next.js、Flask、Cloudflare。",
   "meta.blog": "博客",
-  "meta.contact": "联系"
+  "meta.contact": "联系",
+  "chat.title": "在线咨询",
+  "chat.open": "打开对话",
+  "chat.close": "关闭对话",
+  "chat.greeting": "你好！我是小爪，网站的 AI 助手。关于我们的产品/服务有任何问题都可以问我——或者留下邮箱，我们会尽快联系你。",
+  "chat.placeholder": "输入消息…",
+  "chat.send": "发送",
+  "chat.typing": "对方正在输入",
+  "chat.error": "抱歉，出了点问题。请重试，或留下邮箱我们联系你。",
+  "chat.rateLimited": "你发得有点快啦，稍等一下 🙂"
 };
 
 const BUILTIN: Record<string, Messages> = { en: EN, zh: ZH };
