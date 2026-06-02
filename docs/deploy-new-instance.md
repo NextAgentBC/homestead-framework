@@ -114,6 +114,48 @@ must be in `ADMIN_EMAILS`.
 In `oracle-site-shared`, set `ORACLE_SITE_API=https://mysite-api.example.com/api` and mint a token
 as above. Then design/compose/blog/media/i18n skills all drive this instance.
 
+## 8. (Optional) Live chat answered by 小爪
+
+A floating chat widget answered by a **sandboxed, tool-less** model turn via OpenClaw, mirrored to
+the operator's Telegram, with human take-over. Needs the `openclaw` CLI + a running gateway on the
+host (see `docs/openclaw-*`). Full reference: [`ops/webchat-bridge/README.md`](../ops/webchat-bridge/README.md).
+
+**a. Host bridge** (runs on the host, not in Docker — it shells out to `openclaw`):
+```bash
+cp ops/webchat-bridge/.env.example ops/webchat-bridge/.env   # set WEBCHAT_BRIDGE_TOKEN + WEBCHAT_TG_TARGET (your chat id)
+chmod 600 ops/webchat-bridge/.env
+cp ops/webchat-bridge/webchat-bridge.service ~/.config/systemd/user/
+systemctl --user daemon-reload && systemctl --user enable --now webchat-bridge.service
+loginctl enable-linger "$USER"            # survive reboot (same as the gateway)
+curl -s http://127.0.0.1:18791/health     # {"ok":true,...}
+```
+
+**b. Firewall** — Oracle Cloud Ubuntu REJECTs container→host by default, so allow the bridge port
+(idempotent; add to your boot self-heal so it survives reboot):
+```bash
+sudo iptables -C INPUT -s 172.16.0.0/12 -p tcp --dport 18791 -j ACCEPT 2>/dev/null \
+  || sudo iptables -I INPUT 2 -s 172.16.0.0/12 -p tcp --dport 18791 -j ACCEPT
+```
+
+**c. Backend env** (`backend/.env`) — the token MUST match the bridge's:
+```ini
+WEBCHAT_ENABLED=true
+WEBCHAT_BRIDGE_URL=http://host.docker.internal:18791
+WEBCHAT_BRIDGE_TOKEN=<same as ops/webchat-bridge/.env>
+```
+`docker-compose.yml` already gives the backend `extra_hosts: host.docker.internal:host-gateway`.
+Rebuild backend after editing env: `docker compose up -d --build backend && docker restart tunnel-cloudflared`.
+
+**d. Operator take-over skill** (so 小爪 can reply into a thread from Telegram):
+```bash
+openclaw skills install "$PWD/skills/oracle-site-chat" --force
+systemctl --user restart openclaw-gateway
+```
+
+**Verify:** `curl -s -X POST https://<api-host>/api/chat -H 'Content-Type: application/json' -d '{"message":"hi"}'`
+→ a non-`degraded` reply + a Telegram mirror. Toggle off anytime with `WEBCHAT_ENABLED=false` (backend)
+or build the frontend with `NEXT_PUBLIC_WEBCHAT_ENABLED=false`.
+
 ## Notes
 
 - **Independent instance:** its own DB, content, and design — nothing shared with other deployments.

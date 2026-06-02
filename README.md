@@ -47,6 +47,7 @@ Build a reusable full-stack website framework:
 - i18n: path-based `/zh`, the agent is the translator.
 - Capture: rebuild a section from a screenshot into the flexible `section` block + a reusable pattern library.
 - UI/UX: API-driven design profile, not hard-coded theme values.
+- Live chat: a floating widget answered by a **sandboxed, tool-less 小爪** (via the host `webchat-bridge`), each exchange mirrored to the operator's Telegram, with human take-over. Setup: [`docs/deploy-new-instance.md`](docs/deploy-new-instance.md) §8 · [`ops/webchat-bridge/`](ops/webchat-bridge/README.md).
 - Automation: daily AI-generated blog posts.
 - Delivery: Cloudflare Tunnel preferred, static IP + Nginx fallback.
 - Maintenance: OpenAPI contract and clear module boundaries for OpenClaw/Codex.

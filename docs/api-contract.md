@@ -20,7 +20,9 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `GET` | `/api/pages` · `/api/pages/:slug` | Published content pages (`?locale=`) |
 | `POST` | `/api/auth/google` | Verify Google ID token, create/login user |
 | `POST` | `/api/newsletter/subscribe` | Subscribe an email |
-| `POST` | `/api/contact` | Send a contact message |
+| `POST` | `/api/contact` | Send a contact message (also pings the operator on Telegram) |
+| `POST` | `/api/chat` | Live chat — visitor message (`{sessionId?, message, locale?}`) answered by the sandboxed 小爪 brain; returns `{sessionId, reply}` (rate-limited) |
+| `GET` | `/api/chat/:sessionId` | Live chat — full transcript for a session |
 
 ## Admin Endpoints
 
@@ -43,6 +45,8 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `PATCH` | `/api/admin/i18n/:locale` | Edit UI chrome strings for a locale |
 | `GET` `POST` | `/api/admin/media` | List / upload an image (upload-only, no generation) |
 | `DELETE` | `/api/admin/media/:filename` | Delete a hosted image |
+| `GET` | `/api/admin/chat` · `…/:sessionId` | List live-chat conversations / read one transcript |
+| `POST` | `/api/admin/chat/:sessionId/reply` · `…/close` | Take over a chat (reply) / close-reopen it |
 
 ## Page composition (blocks)
 
