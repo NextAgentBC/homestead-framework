@@ -14,6 +14,12 @@ metadata:
 
 > Prerequisite: `../oracle-site-shared/SKILL.md` for `$ORACLE_SITE_API` + `$ORACLE_SITE_TOKEN`.
 
+> Switching the site to a **whole new industry** (not just colors)? Use
+> `../oracle-site-rebrand` — one atomic op that cascades home + pages + locales and
+> gives you a consistency audit to finish against. After any industry switch or
+> structural change, run `GET /admin/consistency` and clear every finding before
+> reporting done.
+
 Design has two layers, both in the active design profile, both render **instantly**:
 - **Theme** — `tokens` (colors / fonts / radius / spacing). `tokens.colors` keys: `ink` · `muted` · `paper` · `surface` · `line` · `primary` · `accent` · `highlight` · `link`, plus three for the dark "contrast band" (full-bleed hero + CTA banner): `surfaceInverse` (band background), `inkInverse` (text on it), `onPrimary` (text/icon on primary-filled buttons — set dark when `primary` is light). Nothing is hard-coded in components; every surface is a token.
 - **Composition** — `sections`: an ordered list of `hero`, `features`, `cta`, each with a **variant**.

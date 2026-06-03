@@ -78,3 +78,5 @@ Common keys: `nav.blog` `nav.contact` · `home.latest` `home.read` · `blog.titl
 - Don't touch tokens here (global). Use `../oracle-site-design` for look, this for language.
 - Translate *content* (blocks/pages/posts) **and** *chrome* (UI messages) for a complete locale.
 - Untranslated fields automatically fall back to the default locale — safe to translate incrementally.
+- Translate **in place on the same block ids** — never add/remove/reorder blocks in a locale (that makes en/zh structurally diverge). Layout is shared; only words change.
+- **Verify completeness:** after translating, run `GET /admin/consistency` and clear every `missing_translation` / `language_mismatch` finding before telling the user it's done.
