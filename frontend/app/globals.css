@@ -890,6 +890,22 @@ a.post-card .button.ghost { margin-top: 4px; justify-self: start; }
 .gallery-ph { background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--color-accent) 12%, transparent)); }
 .gallery-item figcaption { color: var(--color-muted); font-size: 13.5px; }
 
+/* ---------- Image placeholders (empty slots show the prompt — for students with
+   no image generator; replace the slot with a real photo and these disappear) ---- */
+.img-ph { display: grid; place-items: center; align-content: center; gap: 10px; padding: 18px; text-align: center; color: var(--color-muted); }
+.img-ph svg { opacity: 0.6; }
+.img-ph .img-ph-prompt { font-size: 12.5px; line-height: 1.45; max-width: 32ch; color: color-mix(in srgb, var(--color-ink) 58%, transparent); }
+.img-prompt-hint {
+  position: absolute; left: clamp(16px, 4vw, 56px); bottom: 16px; z-index: 2;
+  max-width: min(64ch, 84%); display: inline-flex; align-items: flex-start; gap: 7px;
+  font-size: 12px; line-height: 1.4; padding: 7px 13px; border-radius: 16px;
+  background: color-mix(in srgb, var(--color-surface-inverse) 48%, transparent);
+  color: color-mix(in srgb, var(--color-ink-inverse) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ink-inverse) 22%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.img-prompt-hint svg { flex: none; margin-top: 1px; }
+
 /* ---------- Team ---------- */
 .team-card { text-align: center; align-items: center; gap: 8px; }
 .team-avatar { width: 84px; height: 84px; border-radius: 999px; object-fit: cover; }

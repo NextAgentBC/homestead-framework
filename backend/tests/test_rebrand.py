@@ -69,6 +69,9 @@ def test_beauty_template_is_complete_and_image_ready(client, auth):
     assert types[0] == "hero" and "gallery" in types and "steps" in types and "pricing" in types
     hero = sections[0]
     assert hero["variant"] == "fullbleed" and "image" in hero["content"]   # image slot present
+    assert hero["content"].get("imagePrompt")                              # empty slot shows its prompt
+    gallery = next(s for s in sections if s["type"] == "gallery")
+    assert all(it.get("imagePrompt") for it in gallery["content"]["items"])  # every gallery slot prompted
     imgs = body["imagery"]["images"]
     assert len(imgs) == 6
     assert all(("prompt" in i and "aspect" in i and "block" in i) for i in imgs)
@@ -86,6 +89,7 @@ def test_other_industry_templates_are_complete_and_image_ready(client, auth, ind
     assert [s["type"] for s in sections] == [
         "hero", "stats", "features", "gallery", "steps", "testimonials", "pricing", "faq", "cta"]
     assert sections[0]["variant"] == "fullbleed" and sections[0]["id"] == f"b_{prefix}_hero"
+    assert sections[0]["content"].get("imagePrompt")   # empty hero slot carries its prompt
     imgs = body["imagery"]["images"]
     assert len(imgs) == 6 and body["imagery"]["style"]
     ids = {s["id"] for s in sections}

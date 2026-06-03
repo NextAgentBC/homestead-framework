@@ -742,6 +742,7 @@ STYLE_PRESETS = {
                 "headline": "Skin and self,", "headlineAccent": "glowing together.",
                 "subhead": "Facials, skin coaching, and quiet body rituals — calm, professional, and natural. We take good care of you, without the hype.",
                 "image": "", "imageFocal": "center", "imageAlt": "A calm guest with luminous, glowing skin",
+                "imagePrompt": "a serene woman with luminous dewy glowing skin and soft natural makeup, eyes gently closed, calm relaxed expression, wrapped in a soft cream towel, clean minimal background with generous negative space",
                 "cta": {"label": "Book a consultation", "href": "/contact"}, "secondaryCta": {"label": "View treatments", "href": "/services"}}},
             {"id": "b_beauty_stats", "type": "stats", "content": {"items": [
                 {"value": "4.9★", "label": "Guest rating"}, {"value": "20+", "label": "Treatments"},
@@ -753,10 +754,10 @@ STYLE_PRESETS = {
                     {"icon": "shield", "title": "Relax & restore", "body": "Face, neck and shoulder relief and soothing massage — beauty that's also real rest."}]}},
             {"id": "b_beauty_gallery", "type": "gallery", "variant": "grid", "content": {
                 "heading": "Inside the studio", "subhead": "A calm, private space — and a few quiet moments from our treatments.", "items": [
-                    {"image": "", "caption": "A treatment in progress"},
-                    {"image": "", "caption": "Our studio"},
-                    {"image": "", "caption": "Gentle, curated products"},
-                    {"image": "", "caption": "Time to truly rest"}]}},
+                    {"image": "", "caption": "A treatment in progress", "imagePrompt": "close-up of a gentle facial treatment, esthetician hands applying cream to luminous glowing skin, calm and clean"},
+                    {"image": "", "caption": "Our studio", "imagePrompt": "calm minimal beauty studio treatment room, soft draped linen, a few green plants, warm wood and stone accents, diffused daylight"},
+                    {"image": "", "caption": "Gentle, curated products", "imagePrompt": "minimal flatlay of premium skincare products, amber glass dropper bottles and ceramic cream jars, dried flowers, pale marble surface"},
+                    {"image": "", "caption": "Time to truly rest", "imagePrompt": "a woman relaxing during a spa session, soft towel, a lit candle and rolled towels nearby, eyes closed, peaceful"}]}},
             {"id": "b_beauty_steps", "type": "steps", "content": {
                 "heading": "How booking works", "subhead": "You don't need to know the treatments — just tell us what you're after.", "items": [
                     {"title": "Online consult", "body": "Tell us about your skin, budget, and what you'd like to improve."},
@@ -778,7 +779,8 @@ STYLE_PRESETS = {
                 {"q": "How far ahead should I book?", "a": "2–3 days ahead is best. Weekends and evenings fill up fast; members get priority."}]}},
             {"id": "b_beauty_cta", "type": "cta", "variant": "banner", "content": {
                 "headline": "Not sure which treatment fits?", "subhead": "Leave your contact and we'll give you a simple recommendation based on your skin, schedule, and budget.",
-                "image": "", "cta": {"label": "Get in touch", "href": "/contact"}}},
+                "image": "", "imagePrompt": "soft-focus calm spa scene, a gentle facial skincare treatment in progress, esthetician hands, dewy glowing skin, peaceful atmosphere, diffused light",
+                "cta": {"label": "Get in touch", "href": "/contact"}}},
         ],
         # Imagery this template needs — the rebrand pipeline generates each prompt and
         # attaches the result to the target block's image field (item = list index).
@@ -1121,13 +1123,14 @@ def _industry_home(spec: dict) -> dict:
     sections = [
         {"id": f"b_{p}_hero", "type": "hero", "variant": "fullbleed", "content": {
             "badge": h[0], "headline": h[1], "headlineAccent": h[2], "subhead": h[3],
-            "image": "", "imageFocal": "center",
+            "image": "", "imageFocal": "center", "imagePrompt": im["hero"],
             "cta": {"label": h[4], "href": h[5]}, "secondaryCta": {"label": h[6], "href": h[7]}}},
         {"id": f"b_{p}_stats", "type": "stats", "content": {"items": [{"value": v, "label": l} for v, l in spec["stats"]]}},
         {"id": f"b_{p}_feat", "type": "features", "variant": "cards", "content": {
             "heading": feat[0], "subhead": feat[1], "items": [{"icon": i, "title": t, "body": b} for i, t, b in feat[2]]}},
         {"id": f"b_{p}_gallery", "type": "gallery", "variant": "grid", "content": {
-            "heading": gal[0], "subhead": gal[1], "items": [{"image": "", "caption": cap} for cap in gal[2]]}},
+            "heading": gal[0], "subhead": gal[1],
+            "items": [{"image": "", "caption": cap, "imagePrompt": im[f"g{k}"]} for k, cap in enumerate(gal[2])]}},
         {"id": f"b_{p}_steps", "type": "steps", "content": {
             "heading": st[0], "subhead": st[1], "items": [{"title": t, "body": b} for t, b in st[2]]}},
         {"id": f"b_{p}_quotes", "type": "testimonials", "content": {
@@ -1137,7 +1140,7 @@ def _industry_home(spec: dict) -> dict:
              **({"featured": True} if ft else {})} for (n, pp, per, ff, ft) in pr[2]]}},
         {"id": f"b_{p}_faq", "type": "faq", "content": {"heading": fq[0], "items": [{"q": qq, "a": aa} for qq, aa in fq[1]]}},
         {"id": f"b_{p}_cta", "type": "cta", "variant": "banner", "content": {
-            "headline": c[0], "subhead": c[1], "image": "", "cta": {"label": c[2], "href": "/contact"}}},
+            "headline": c[0], "subhead": c[1], "image": "", "imagePrompt": im["cta"], "cta": {"label": c[2], "href": "/contact"}}},
     ]
     images = [{"block": f"b_{p}_hero", "field": "image", "aspect": "16:9", "prompt": im["hero"]}] + \
         [{"block": f"b_{p}_gallery", "item": k, "field": "image", "aspect": "1:1", "prompt": im[f"g{k}"]} for k in range(4)] + \

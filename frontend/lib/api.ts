@@ -62,6 +62,7 @@ export type Section = {
     image?: string;
     imageFocal?: string;
     imageAlt?: string;
+    imagePrompt?: string;
     cta?: SectionCta;
     secondaryCta?: SectionCta;
     heading?: string;
@@ -89,6 +90,7 @@ export type Section = {
       q?: string;
       a?: string;
       image?: string;
+      imagePrompt?: string;
       href?: string;
       cta?: SectionCta;
     }[];

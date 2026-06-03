@@ -48,11 +48,18 @@ Body: `{ "industry": "beauty" }` (or `"preset"` for a named style; optional
 to the 18 templates (see `oracle-site-design`). This is a **rebrand, not a tweak** — it
 regenerates the home and resets localized section copy on purpose.
 
-## 2a. Fill the template's declared imagery (it tells you exactly what)
+## 2a. Imagery — placeholders by default, generation optional
 
-A complete industry template **declares the photos it needs** — the rebrand response
-returns `imagery: { style, images: [ {block, item?, field, aspect, prompt} ] }`. A real
-site lives on imagery, so generate each one and attach it (don't ship empty image slots):
+Template image slots ship **empty on purpose**. With no image, each one renders a
+**designed placeholder showing its prompt** (`imagePrompt` on the block) — so even with
+**no image generator** (the usual case for students) the page looks intentional and says
+exactly what photo goes where. **That's the default; you don't have to do anything.**
+The user replaces a slot with a real photo later (upload via `oracle-site-media`) and the
+placeholder disappears.
+
+**Only if you have an image generator** (e.g. openart on this host) and want real photos
+now: the rebrand response hands you `imagery: { style, images: [ {block, item?, field,
+aspect, prompt} ] }` — generate each and attach it:
 
 ```bash
 RB=$(curl -s -X POST "$ORACLE_SITE_API/admin/site/rebrand" -H "Authorization: Bearer $ORACLE_SITE_TOKEN" \

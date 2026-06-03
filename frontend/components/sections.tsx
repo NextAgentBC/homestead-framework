@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Mail, Shield, Gauge, Layers, Zap, BookOpen, Cloud } from "lucide-react";
+import { ArrowRight, Sparkles, Mail, Shield, Gauge, Layers, Zap, BookOpen, Cloud, Image as ImageIcon } from "lucide-react";
 import type { Section, SectionCta, Site } from "@/lib/api";
 
 const ICONS: Record<string, typeof Sparkles> = {
@@ -17,6 +17,18 @@ const ICONS: Record<string, typeof Sparkles> = {
 function SectionIcon({ name, color }: { name?: string; color?: string }) {
   const Cmp = (name && ICONS[name]) || Sparkles;
   return <Cmp size={24} strokeWidth={1.8} color={color || "var(--color-primary)"} />;
+}
+
+// Image slots ship empty in the industry templates (a student may have no image
+// generator). When empty, show a designed placeholder carrying the prompt — the page
+// looks intentional and tells you exactly what photo to drop in later.
+function PromptHint({ prompt }: { prompt?: string }) {
+  if (!prompt?.trim()) return null;
+  return (
+    <span className="img-prompt-hint">
+      <ImageIcon size={13} strokeWidth={1.8} /> {prompt}
+    </span>
+  );
 }
 
 function HeroActions({ cta, secondaryCta }: { cta?: SectionCta; secondaryCta?: SectionCta }) {
@@ -92,6 +104,7 @@ function Hero({ section, site }: { section: Section; site: Site }) {
           <span className="hero-scrim" aria-hidden="true" />
         </>
       )}
+      {!image && <PromptHint prompt={c.imagePrompt} />}
       {copy}
     </section>
   );
@@ -364,6 +377,7 @@ function Cta({ section }: { section: Section }) {
           <span className="cta-scrim" aria-hidden="true" />
         </>
       )}
+      {!image && <PromptHint prompt={c.imagePrompt} />}
       <div className="cta-copy">
         {c.headline && <h2>{c.headline}</h2>}
         {c.subhead && <p className="lede">{c.subhead}</p>}
@@ -411,7 +425,10 @@ function Gallery({ section }: { section: Section }) {
             {item.image ? (
               <img src={item.image} alt={item.caption || ""} loading="lazy" />
             ) : (
-              <div className="gallery-ph" aria-hidden="true" />
+              <div className="gallery-ph img-ph">
+                <ImageIcon size={22} strokeWidth={1.5} aria-hidden="true" />
+                {item.imagePrompt && <span className="img-ph-prompt">{item.imagePrompt}</span>}
+              </div>
             )}
             {item.caption && <figcaption>{item.caption}</figcaption>}
           </figure>
