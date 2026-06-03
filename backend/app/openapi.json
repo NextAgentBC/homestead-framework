@@ -62,6 +62,9 @@
     "/admin/surfaces": {
       "get": { "summary": "List every editable surface (home + all pages) with their blocks and available locales" }
     },
+    "/admin/consistency": {
+      "get": { "summary": "Audit site coherence across every surface x locale: structural_drift, missing_translation, language_mismatch, industry_residue. Returns {ok, findings[], summary} — the definition of done for a rebrand/translation pass" }
+    },
     "/admin/revisions": {
       "get": { "summary": "List surface snapshots (undo history), newest first. Each is the state BEFORE a change. ?target=home|<page-slug>|design scopes to one surface (+ optional ?locale=); omit target for recent across all" }
     },

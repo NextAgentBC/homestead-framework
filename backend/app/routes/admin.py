@@ -18,7 +18,7 @@ from ..models import BlockPattern, BlogPost, ChatConversation, ChatMessage, Desi
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
 from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
-from ..services import block_service, revision_service
+from ..services import block_service, consistency_service, revision_service
 
 bp = Blueprint("admin", __name__)
 
@@ -550,6 +550,34 @@ def list_surfaces():
     return {"items": out, "meta": {"count": len(out),
             "defaultLocale": current_app.config["SITE_DEFAULT_LOCALE"],
             "locales": current_app.config["SITE_LOCALES"]}}
+
+
+@bp.get("/consistency")
+@require_auth(admin=True)
+def consistency_audit():
+    """Audit site coherence across every surface × locale — structural drift,
+    untranslated/missing copy, wrong-language text, and leftover-industry terms.
+    Returns {ok, findings:[...], summary}. This is the 'definition of done' for a
+    rebrand/translation pass: keep fixing until `ok` is true."""
+    profile = _active_design_profile()
+    locales = current_app.config["SITE_LOCALES"]
+    default_locale = current_app.config["SITE_DEFAULT_LOCALE"]
+    industry = (profile.industry if profile else "") or current_app.config["SITE_INDUSTRY"]
+
+    surfaces = []
+    if profile:
+        surfaces.append({"name": "home", "kind": "home",
+                         "base": {"sections": profile.sections or [], "text": {}},
+                         "i18n": profile.i18n or {}})
+    for page in Page.query.order_by(Page.nav_order.asc()).all():
+        surfaces.append({"name": page.slug, "kind": "page",
+                         "base": {"sections": page.sections or [], "text": {
+                             "title": page.title, "nav_label": page.nav_label,
+                             "body_markdown": page.body_markdown,
+                             "meta_title": page.meta_title, "meta_description": page.meta_description}},
+                         "i18n": page.i18n or {}})
+
+    return {"item": consistency_service.run_audit(surfaces, default_locale, locales, industry)}
 
 
 # --- Revisions: list history · undo the last change · restore a kept point ---

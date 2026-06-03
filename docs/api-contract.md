@@ -37,6 +37,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `POST` | `/api/admin/design/generate` | Apply a preset/industry, or generate from competitors |
 | `POST` | `/api/admin/design/analyze-competitors` | Fetch competitor signals → update design |
 | `GET` | `/api/admin/surfaces` | List every editable surface (home + pages) + locales |
+| `GET` | `/api/admin/consistency` | Audit coherence across every surface×locale (structural drift · missing/untranslated copy · wrong-language text · industry residue) → `{ok, findings[], summary}` |
 | `GET` `POST` | `/api/admin/compose/:target/blocks` | List / add a block (or insert a `{pattern}`) |
 | `PATCH` `DELETE` | `/api/admin/compose/:target/blocks/:id` | Update / remove a block |
 | `POST` | `/api/admin/compose/:target/blocks/:id/move` · `…/duplicate` | Reorder / duplicate |
