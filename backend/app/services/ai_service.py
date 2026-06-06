@@ -6,6 +6,8 @@ import requests
 from flask import current_app
 from slugify import slugify
 
+from . import site_service
+
 
 def _fallback_post(topic: str) -> dict:
     today = datetime.utcnow().strftime("%Y-%m-%d")
@@ -33,15 +35,18 @@ def _fallback_post(topic: str) -> dict:
 
 
 def generate_blog_post(topic: Optional[str] = None) -> dict:
-    topic = topic or current_app.config["SITE_INDUSTRY"]
+    # Use the live site identity so the daily blog follows a rebrand (new
+    # industry/audience), not the original env defaults.
+    site = site_service.effective()
+    topic = topic or site["industry"]
     api_key = current_app.config["DEEPSEEK_API_KEY"]
     if not api_key:
         return _fallback_post(topic)
 
     prompt = {
         "industry": topic,
-        "audience": current_app.config["SITE_AUDIENCE"],
-        "region": current_app.config["SITE_REGION"],
+        "audience": site["audience"],
+        "region": site["region"],
         "requirements": [
             "Return valid JSON only.",
             "Write a useful evergreen blog post.",

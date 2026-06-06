@@ -3,13 +3,13 @@
 
 Source of truth is GET /api/blocks (the manifest). Each generated skill is a
 discoverable trigger surface (so "加个价格表" / "add an FAQ" routes precisely);
-the actual work is delegated to the oracle-site-compose engine — no duplicated
+the actual work is delegated to the homestead-site-compose engine — no duplicated
 CRUD logic. Re-run this whenever the block library changes; new types appear in
 /api/blocks automatically and get a skill here.
 
 Usage:
     python3 skills/generate-block-skills.py [API_BASE]
-    API_BASE defaults to $ORACLE_SITE_API or http://127.0.0.1:8000/api
+    API_BASE defaults to $HOMESTEAD_SITE_API or http://127.0.0.1:8000/api
 """
 import json
 import os
@@ -17,7 +17,7 @@ import sys
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-API = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get("ORACLE_SITE_API") or "http://127.0.0.1:8000/api").rstrip("/")
+API = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get("HOMESTEAD_SITE_API") or "http://127.0.0.1:8000/api").rstrip("/")
 
 # Bilingual trigger phrases per known type; generic fallback for new types.
 TRIGGERS = {
@@ -59,8 +59,8 @@ def render(block, icons):
     variants_line = " · ".join(f"`{v}`" for v in variants) if variants else "`default`"
 
     return f"""---
-name: oracle-site-block-{t}
-description: "{label} block — add or edit a {label.lower()} on any Oracle Site page by natural language. Thin recipe over the compose engine ({t}). Triggers (zh+en): {triggers}."
+name: homestead-site-block-{t}
+description: "{label} block — add or edit a {label.lower()} on any Homestead page by natural language. Thin recipe over the compose engine ({t}). Triggers (zh+en): {triggers}."
 metadata:
   version: 0.1.0
   generated: true
@@ -74,8 +74,8 @@ metadata:
 # {label} block (`{t}`)
 
 > Auto-generated from the block manifest (`GET /api/blocks`). Full engine, rules,
-> and edit/move/remove recipes: `../oracle-site-compose/SKILL.md`.
-> Prerequisite: `../oracle-site-shared/SKILL.md` for `$ORACLE_SITE_API` + `$ORACLE_SITE_TOKEN`.
+> and edit/move/remove recipes: `../homestead-site-compose/SKILL.md`.
+> Prerequisite: `../homestead-site-shared/SKILL.md` for `$HOMESTEAD_SITE_API` + `$HOMESTEAD_SITE_TOKEN`.
 
 {desc}
 
@@ -87,15 +87,15 @@ block looks complete immediately — pass `content` only to override.
 
 ```bash
 # Add a {label.lower()} to the home page
-curl -s -X POST "$ORACLE_SITE_API/admin/compose/home/blocks" \\
-  -H "Authorization: Bearer $ORACLE_SITE_TOKEN" -H "Content-Type: application/json" \\
+curl -s -X POST "$HOMESTEAD_SITE_API/admin/compose/home/blocks" \\
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \\
   -d '{{"type":"{t}","position":"end"}}'
 ```
 
 To **edit / move / remove** an existing one: list blocks to get its id, then use
 the compose engine (PATCH content, `/move`, DELETE) or a `batch` call. For
 multi-step requests prefer `POST /admin/compose/{{target}}/batch`. See
-`../oracle-site-compose/SKILL.md`.
+`../homestead-site-compose/SKILL.md`.
 """
 
 
@@ -111,7 +111,7 @@ def main():
     written = []
     for block in items:
         t = block["type"]
-        d = os.path.join(HERE, f"oracle-site-block-{t}")
+        d = os.path.join(HERE, f"homestead-site-block-{t}")
         os.makedirs(d, exist_ok=True)
         with open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8") as f:
             f.write(render(block, icons))

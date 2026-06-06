@@ -26,7 +26,7 @@ _CJK = re.compile(r"[㐀-䶿一-鿿豈-﫿]")
 # rebrand into a real-business industry.
 _RESIDUE = (
     "openclaw", "homestead", "website framework", "tech stack", "elementor",
-    "design tokens", "saas", "oracle site",
+    "design tokens", "saas",
 )
 # Content keys that hold URLs / icon names / machine values, not human copy.
 _NON_TEXT_KEYS = {"image", "icon", "href", "imageFocal", "imageAlt", "id", "type", "variant"}

@@ -24,7 +24,7 @@ from ..models import (
     UiMessages,
 )
 from ..services.design_service import DEFAULT_DESIGN_PROFILE, normalized_profile
-from ..services import block_service, chat_service
+from ..services import block_service, chat_service, site_service
 from ..services.email_service import send_email
 
 bp = Blueprint("public", __name__)
@@ -62,16 +62,19 @@ def media(filename: str):
 
 @bp.get("/site")
 def site():
+    cfg = current_app.config
+    s = site_service.effective()
     return {
         "item": {
-            "name": current_app.config["SITE_NAME"],
-            "url": current_app.config["SITE_URL"],
-            "industry": current_app.config["SITE_INDUSTRY"],
-            "audience": current_app.config["SITE_AUDIENCE"],
-            "region": current_app.config["SITE_REGION"],
-            "googleClientId": current_app.config["GOOGLE_CLIENT_ID"],
-            "locales": current_app.config["SITE_LOCALES"],
-            "defaultLocale": current_app.config["SITE_DEFAULT_LOCALE"],
+            "name": s["site_name"],
+            "url": cfg["SITE_URL"],
+            "industry": s["industry"],
+            "audience": s["audience"],
+            "region": s["region"],
+            "assistantName": s["assistant_name"],
+            "googleClientId": cfg["GOOGLE_CLIENT_ID"],
+            "locales": cfg["SITE_LOCALES"],
+            "defaultLocale": cfg["SITE_DEFAULT_LOCALE"],
         }
     }
 
@@ -198,7 +201,7 @@ def subscribe():
     db.session.commit()
     send_email(
         email,
-        f"Welcome to {current_app.config['SITE_NAME']}",
+        f"Welcome to {site_service.effective()['site_name']}",
         "Thanks for subscribing. You will receive practical updates and daily essays from the site.",
     )
     return {"item": {"email": subscription.email, "status": subscription.status}}
@@ -218,14 +221,14 @@ def contact():
             send_email(admin, "New website contact message", f"From: {email}\n\n{message}")
         except Exception as exc:  # noqa: BLE001 — SMTP misconfig must not 500 the form
             current_app.logger.warning("contact email failed: %s", str(exc)[:200])
-    # Ping the operator on Telegram too (best-effort) so 小爪 surfaces the lead live.
+    # Ping the operator on Telegram too (best-effort) so the assistant surfaces the lead live.
     who = f"{name} <{email}>" if name else email
     chat_service.notify_operator(f"📨 网站留言\n来自：{who}\n\n{message[:1500]}")
     return {"item": {"receivedAt": datetime.now(timezone.utc).isoformat()}}
 
 
 # ---------------------------------------------------------------------------
-# Website live chat — answered by the (tool-less) 小爪 brain via the host bridge.
+# Website live chat — answered by the (tool-less) assistant brain via the host bridge.
 # ---------------------------------------------------------------------------
 
 def _clean_session_id(raw, *, generate=False):

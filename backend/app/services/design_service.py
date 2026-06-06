@@ -79,7 +79,7 @@ DEFAULT_SECTIONS = [
         "content": {
             "heading": "Why this framework",
             "left": {"title": "The usual way", "items": ["Locked into a platform", "Pay per seat, forever", "Hard to customize", "Your data is theirs"]},
-            "right": {"title": "Oracle Site", "items": ["Your own server + domain", "One-time setup, no rent", "Fully yours to restyle", "You own everything"]},
+            "right": {"title": "Homestead", "items": ["Your own server + domain", "One-time setup, no rent", "Fully yours to restyle", "You own everything"]},
         },
     },
     {
@@ -317,8 +317,11 @@ def deep_merge(base: dict, override: dict) -> dict:
 def profile_for_industry(industry: str, competitor_urls: Optional[list[str]] = None) -> dict:
     normalized = (industry or "education").strip().lower()
     # If the industry maps to a full style template, use it as the base so the
-    # site gets a complete, section-filled design — not just a recolor.
-    style_key = INDUSTRY_STYLE_ALIASES.get(normalized)
+    # site gets a complete, section-filled design — not just a recolor. An
+    # industry that IS a preset key (education, beauty, nonprofit, finance, …)
+    # uses that preset directly; aliases (dental→healthcare, gym→fitness, …) map
+    # first. Otherwise fall through to the token-only INDUSTRY_PRESETS recolor.
+    style_key = INDUSTRY_STYLE_ALIASES.get(normalized) or (normalized if normalized in STYLE_PRESETS else None)
     if style_key:
         styled = apply_style(style_key)
         if styled:
@@ -1285,6 +1288,210 @@ _RICH_INDUSTRY_SPECS = {
                  "g3": "a calm stretching and recovery area in a gym, plants, natural light",
                  "cta": "a coach high-fiving a member after a workout, genuine, bright gym, soft focus"},
         "imageStyle": "bright energetic natural light, clean modern tones with a bold accent, dynamic but premium fitness photography, photorealistic, no text, no watermark, no logo",
+    },
+    "education": {
+        "prefix": "edu",
+        "hero": ["Now enrolling", "Learning that", "actually sticks.",
+                 "Clear lessons, real progress, and a teacher who meets every student where they are — online or in person.",
+                 "Book a free trial", "/contact", "See programs", "/services"],
+        "stats": [("1,200+", "Students taught"), ("4.9★", "Parent rating"), ("10+ yrs", "Teaching"), ("1:1", "Attention")],
+        "feat": ("How we teach", "Structure, clarity, and encouragement.", [
+            ("book", "Clear curriculum", "A plan you can follow, milestone by milestone, with no gaps left behind."),
+            ("gauge", "Real progress", "Regular check-ins and reports so you always know where things stand."),
+            ("shield", "Caring teachers", "Patient, encouraging tutors who make hard ideas finally click.")]),
+        "gallery": ("Inside the classroom", "Where the learning happens.", ["A lesson in progress", "Our study space", "One-on-one help", "Happy results"]),
+        "steps": ("How to start", "From first call to first win.", [
+            ("Free trial", "Book a no-pressure trial lesson to see the fit."), ("Assess", "We find the level and set clear goals together."),
+            ("Learn", "Weekly lessons tailored to the student's pace."), ("Track", "Progress reports keep everyone on the same page.")]),
+        "quotes": ("What parents say", [
+            ("Her grades jumped a full level in one term — and she enjoys it now.", "A parent", "Grade 9"),
+            ("Patient, clear, and genuinely kind. Exactly what we hoped for.", "A parent", "Grade 11"),
+            ("Booked a trial, never looked back.", "A parent", "Grade 7")]),
+        "pricing": ("Programs", "Simple, flexible plans.", [
+            ("Single lesson", "$60", "/hour", ["1:1 tutoring", "Any subject", "Flexible scheduling"], False),
+            ("Termly plan", "$540", "/10 lessons", ["Save per lesson", "Progress reports", "Priority booking"], True),
+            ("Small group", "$35", "/seat", ["2–4 students", "Same level", "Collaborative learning"], False)]),
+        "faq": ("Common questions", [
+            ("Do you teach online or in person?", "Both — whatever works best for the student and family."),
+            ("Can we start with a trial?", "Yes — a free first lesson so you can make sure it's a fit.")]),
+        "cta": ("Ready to see progress?", "Book a free trial lesson — no pressure, no commitment.", "Book a free trial"),
+        "imgs": {"hero": "a warm encouraging tutor helping a happy student at a bright study table with books and a laptop, natural light, focused and positive",
+                 "g0": "a tutor and student working together at a desk, engaged, bright classroom, natural light",
+                 "g1": "a calm modern study space with bookshelves and a big table, warm daylight",
+                 "g2": "close-up of a student writing in a workbook while a teacher points and explains, encouraging",
+                 "g3": "a smiling student holding a graded test with a thumbs up, bright and hopeful",
+                 "cta": "a teacher and student sharing a high-five at a study desk, genuine joy, warm light, soft focus"},
+        "imageStyle": "bright warm natural light, friendly approachable blue and amber tones, encouraging and credible education photography, photorealistic, no text, no watermark, no logo",
+    },
+    "realestate": {
+        "prefix": "re",
+        "hero": ["Now listing", "Find the address that", "feels like home.",
+                 "Local expertise, honest advice, and a calm hand through every step of buying or selling.",
+                 "Book a viewing", "/contact", "Browse listings", "/services"],
+        "stats": [("$2.1B", "Sold to date"), ("1,400+", "Homes closed"), ("21 days", "Avg. to offer"), ("98%", "Of asking")],
+        "feat": ("How we help", "From first viewing to the keys.", [
+            ("shield", "Sell for more", "Real pricing data and standout photography that move homes fast."),
+            ("layers", "Buy with confidence", "Off-market access and honest advice on every property."),
+            ("gauge", "Smooth closings", "We manage the paperwork and the timeline so you don't have to.")]),
+        "gallery": ("Featured spaces", "A look at what we list.", ["A bright living room", "A modern kitchen", "Curb appeal", "A calm bedroom"]),
+        "steps": ("How it works", "Four simple steps.", [
+            ("Meet", "Tell us your goals and timeline over a free consult."), ("Plan", "We price with real data and build a tailored strategy."),
+            ("Go live", "Pro photos, listings, and viewings that convert."), ("Close", "We handle offers and paperwork to a clean close.")]),
+        "quotes": ("From our clients", [
+            ("Sold above asking in under three weeks. Calm, sharp, and honest throughout.", "The Halls", "Sellers"),
+            ("They found exactly the right home for us — and made it easy.", "L. Moreau", "Buyer"),
+            ("First-time buyers and they made it feel effortless.", "Sam & Nia", "Buyers")]),
+        "pricing": ("How we charge", "Transparent, agreed up front.", [
+            ("Buyer's agent", "Free", "", ["We're paid by the sale", "Off-market access", "Negotiation on your side"], False),
+            ("Seller's package", "2.5%", "/sale", ["Pro photography", "Full marketing", "Open houses & viewings"], True),
+            ("Rentals & mgmt", "8%", "/mo", ["Tenant screening", "Rent collection", "Maintenance handling"], False)]),
+        "faq": ("Questions", [
+            ("What are your fees?", "A simple, transparent commission agreed up front — no surprises at closing."),
+            ("Do you handle rentals too?", "Yes — sales, lettings, and property management across the city.")]),
+        "cta": ("Thinking of making a move?", "Get a free, no-pressure valuation of your home.", "Request a valuation"),
+        "imgs": {"hero": "a beautiful modern home exterior at golden hour with warm lights on, inviting, professional real estate photography",
+                 "g0": "a bright airy living room with large windows and tasteful furniture, natural light",
+                 "g1": "a sleek modern kitchen with an island, clean and luxurious, daylight",
+                 "g2": "an attractive house facade with a landscaped front yard, blue sky, curb appeal",
+                 "g3": "a serene staged bedroom with soft linens and morning light",
+                 "cta": "a happy couple receiving keys in front of their new home, joyful, soft focus"},
+        "imageStyle": "bright natural daylight, clean architectural slate and warm neutral tones, premium real estate and interior photography, photorealistic, no text, no watermark, no logo",
+    },
+    "creative": {
+        "prefix": "studio",
+        "hero": ["Studio for hire", "Ideas worth", "staring at.",
+                 "A small studio making brands, sites, and campaigns that refuse to blend in.",
+                 "Start a project", "/contact", "See the work", "/services"],
+        "stats": [("120+", "Projects shipped"), ("4.9★", "Client rating"), ("12", "Awards"), ("Senior", "Team only")],
+        "feat": ("What we make", "Strategy, identity, and the craft to ship it.", [
+            ("sparkles", "Brand identity", "Names, logos, and systems with a real point of view."),
+            ("layers", "Websites", "Fast, distinctive sites built to convert and last."),
+            ("zap", "Campaigns", "Launches and films that earn attention, not buy it.")]),
+        "gallery": ("Selected work", "A few things we're proud of.", ["A brand identity", "A website design", "A campaign still", "A packaging design"]),
+        "steps": ("How we work", "A tight, senior process.", [
+            ("Discover", "We dig into your goals, audience, and edge."), ("Concept", "A few bold directions, not a hundred safe ones."),
+            ("Craft", "We design, build, and polish to a high finish."), ("Launch", "We ship it and help it land with impact.")]),
+        "quotes": ("Kind words", [
+            ("They gave us an identity people actually talk about. Sales followed.", "CEO", "DTC brand"),
+            ("Fast, fearless, and ridiculously talented. Just hire them.", "CMO", "Fintech"),
+            ("The site doubled our conversion and won an award. Both.", "Founder", "Studio")]),
+        "pricing": ("Engagements", "Pick the scope that fits.", [
+            ("Brand sprint", "$6k", "/project", ["Logo + identity", "Brand guidelines", "2-week turnaround"], False),
+            ("Website", "$18k", "/project", ["Design + build", "CMS + handoff", "Built to convert"], True),
+            ("Retainer", "$5k", "/mo", ["Ongoing design", "Priority access", "A senior team"], False)]),
+        "faq": ("Good to know", [
+            ("Who actually does the work?", "Founders and senior designers — never juniors or account layers."),
+            ("How fast can you start?", "Usually within a week; sprints can be quicker.")]),
+        "cta": ("Got something to launch?", "Tell us what you're building — we'll bring the craft.", "Start a project"),
+        "imgs": {"hero": "a bold creative studio workspace with mood boards and design prints on the wall, energetic, natural light",
+                 "g0": "a striking brand identity flatlay with logo and color swatches on a clean desk",
+                 "g1": "a designer's screen showing a beautiful website mockup, modern studio, soft light",
+                 "g2": "a cinematic campaign film still, bold and artful, high contrast",
+                 "g3": "premium product packaging design on a minimal surface, studio lighting",
+                 "cta": "a creative team collaborating energetically around a table of sketches, candid, soft focus"},
+        "imageStyle": "bold high-contrast studio lighting, confident contemporary tones with a punchy accent, editorial design and agency photography, photorealistic, no text, no watermark, no logo",
+    },
+    "tech": {
+        "prefix": "saas",
+        "hero": ["Ship faster", "The platform your", "team will love.",
+                 "Launch, measure, and iterate from one clean workspace — no glue code, no busywork.",
+                 "Start free", "/contact", "See how it works", "/services"],
+        "stats": [("10x", "Faster setup"), ("99.9%", "Uptime"), ("<200ms", "API latency"), ("SOC 2", "Ready")],
+        "feat": ("Everything you need to scale", "Built for teams that move fast and break nothing.", [
+            ("zap", "Fast by default", "Sub-second loads and a snappy API your users feel."),
+            ("shield", "Secure & compliant", "Encryption, audit logs, and SSO out of the box."),
+            ("gauge", "Observable", "Dashboards and alerts so nothing slips by.")]),
+        "gallery": ("Inside the product", "A look at the workspace.", ["The dashboard", "Team collaboration", "Analytics view", "Mobile app"]),
+        "steps": ("Get started", "Live the same day.", [
+            ("Sign up", "Create your workspace in under a minute."), ("Connect", "Plug in your stack with native integrations."),
+            ("Build", "Ship your first workflow with no glue code."), ("Scale", "Grow with usage-based pricing that's predictable.")]),
+        "quotes": ("Loved by teams", [
+            ("We replaced five tools with one. The team is faster and happier.", "S. Patel", "Head of Ops"),
+            ("Setup took an afternoon. Support actually knows the product.", "K. Brooks", "CTO"),
+            ("The fastest, cleanest tool in our stack by far.", "L. Romano", "Eng lead")]),
+        "pricing": ("Pricing that scales", "Start free. Upgrade when it pays for itself.", [
+            ("Free", "$0", "/mo", ["1 project", "Community support", "Core API"], False),
+            ("Team", "$49", "/mo", ["Unlimited projects", "SSO + audit logs", "Priority support"], True),
+            ("Enterprise", "Custom", "", ["SLA + SOC 2", "Dedicated infra", "Solutions engineer"], False)]),
+        "faq": ("Questions", [
+            ("How long does setup take?", "Most teams are live the same day — connect your stack and go."),
+            ("Can I self-host?", "Yes — it runs on your own server and domain, fully owned.")]),
+        "cta": ("Ready to ship faster?", "Spin up a workspace in minutes — free to start.", "Start free"),
+        "imgs": {"hero": "a sleek modern SaaS dashboard on a laptop in a bright office, clean UI, professional, natural light",
+                 "g0": "a clean analytics dashboard on a large monitor, modern workspace",
+                 "g1": "a diverse product team collaborating at a desk with laptops, bright office",
+                 "g2": "colorful data visualizations and charts on a screen, crisp and modern",
+                 "g3": "a smartphone showing a clean mobile app interface, minimal, soft light",
+                 "cta": "a happy developer team celebrating a launch in a modern office, candid, soft focus"},
+        "imageStyle": "bright clean natural light, modern indigo and cyan tech tones, crisp product and workspace photography, photorealistic, no text, no watermark, no logo",
+    },
+    "nonprofit": {
+        "prefix": "ngo",
+        "hero": ["Join the cause", "Together,", "we can do more.",
+                 "Real change, made by ordinary people who show up. Your support goes further than you think.",
+                 "Donate", "/contact", "Volunteer", "/services"],
+        "stats": [("50k+", "People helped"), ("120", "Volunteers"), ("92%", "Goes to programs"), ("15 yrs", "On the ground")],
+        "feat": ("How we help", "Direct, lasting, and accountable.", [
+            ("sparkles", "Direct support", "Meeting immediate needs with dignity and care."),
+            ("book", "Long-term programs", "Building skills and stability that last beyond a crisis."),
+            ("mail", "Community", "Connecting people who care to people who need it.")]),
+        "gallery": ("Our work", "Moments from the field.", ["Helping hands", "A community event", "Volunteers at work", "A family we served"]),
+        "steps": ("How to help", "A few ways to make a difference.", [
+            ("Give", "A one-time or monthly gift — every dollar tracked."), ("Volunteer", "Lend a few hours; we'll match you to a need."),
+            ("Spread the word", "Share our work and grow the circle of support."), ("See the impact", "We report exactly where your help goes.")]),
+        "quotes": ("Voices we serve", [
+            ("They didn't just help — they treated us like family.", "A. R.", "Program member"),
+            ("I volunteer because I see exactly where it goes.", "J. M.", "Volunteer"),
+            ("This is what hope looks like, up close.", "Local partner", "Community")]),
+        "pricing": ("Ways to give", "Any amount makes a difference.", [
+            ("One-time", "Any", "", ["Goes straight to programs", "Tax-deductible", "Instant receipt"], False),
+            ("Monthly", "$25", "/mo", ["Sustained impact", "Cancel anytime", "Member updates"], True),
+            ("Partner", "Custom", "", ["Corporate matching", "Event sponsorship", "Named programs"], False)]),
+        "faq": ("Good to know", [
+            ("Where does my donation go?", "92% goes directly to programs — we publish a full annual report."),
+            ("Is my gift tax-deductible?", "Yes — you'll get a receipt by email right away.")]),
+        "cta": ("Be part of it.", "Give, volunteer, or just spread the word — it all helps.", "Get involved"),
+        "imgs": {"hero": "volunteers and community members smiling together outdoors at a charity event, warm and hopeful, natural light",
+                 "g0": "many hands joined together in a circle of support, warm and hopeful, soft light",
+                 "g1": "a lively community volunteer event outdoors, people helping, bright day",
+                 "g2": "volunteers sorting donations and supplies, busy and purposeful",
+                 "g3": "a grateful family smiling warmly, candid portrait, hopeful",
+                 "cta": "a diverse group of volunteers in matching shirts smiling together, genuine, soft focus"},
+        "imageStyle": "warm natural daylight, hopeful green and amber tones, sincere documentary nonprofit photography, photorealistic, no text, no watermark, no logo",
+    },
+    "finance": {
+        "prefix": "fin",
+        "hero": ["Now taking clients", "Grow it. Protect it.", "Understand it.",
+                 "Clear advice and steady hands for your money — no jargon, no surprises.",
+                 "Book a consultation", "/contact", "Our services", "/services"],
+        "stats": [("$2B+", "Under advice"), ("20 yrs", "Track record"), ("0", "Hidden fees"), ("24/7", "Account access")],
+        "feat": ("What we do", "The essentials, done with care.", [
+            ("shield", "Plan", "A clear roadmap for your goals and your timeline."),
+            ("gauge", "Invest", "Disciplined, diversified, and tax-aware portfolios."),
+            ("layers", "Protect", "Insurance and estate planning that actually holds up.")]),
+        "gallery": ("Our practice", "Calm, professional, and clear.", ["A client meeting", "Our office", "Planning together", "A clear report"]),
+        "steps": ("How we work", "Clear from day one.", [
+            ("Consult", "A free first conversation about your situation."), ("Plan", "A written plan with transparent, agreed fees."),
+            ("Invest", "We put the plan to work, tax-aware throughout."), ("Review", "Regular check-ins so the plan tracks your life.")]),
+        "quotes": ("Client confidence", [
+            ("They explained everything plainly and got us on track fast.", "R. Halloran", "Client"),
+            ("Transparent fees and real advice. A breath of fresh air.", "S. Okafor", "Client"),
+            ("I finally understand my money — and I sleep better.", "M. & J. Reyes", "Clients")]),
+        "pricing": ("Transparent fees", "No surprises, ever.", [
+            ("Starter", "0.5%", "/yr", ["Core plan", "Annual review", "Online access"], False),
+            ("Wealth", "0.8%", "/yr", ["Full plan", "Quarterly reviews", "Tax + estate"], True),
+            ("Family office", "Custom", "", ["Dedicated team", "Bespoke planning", "Concierge service"], False)]),
+        "faq": ("Questions", [
+            ("Are you a fiduciary?", "Yes — we're legally bound to act in your best interest."),
+            ("What's the minimum?", "We work with a range of clients — let's talk about your situation.")]),
+        "cta": ("Take the first step.", "Book a free, no-pressure consultation today.", "Book a consultation"),
+        "imgs": {"hero": "a professional financial advisor meeting warmly with a client at a desk, charts on screen, bright office, trustworthy",
+                 "g0": "two people in a calm financial consultation, documents on the table, trust",
+                 "g1": "a sleek professional office with a city view, calm and credible",
+                 "g2": "clear financial charts and planning documents on a desk, organized",
+                 "g3": "a clean printed financial report with glasses and a pen, professional detail",
+                 "cta": "a confident handshake between advisor and happy client in a bright office, soft focus"},
+        "imageStyle": "bright professional natural light, trustworthy emerald and navy tones, calm credible finance photography, photorealistic, no text, no watermark, no logo",
     },
 }
 

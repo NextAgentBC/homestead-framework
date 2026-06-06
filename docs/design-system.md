@@ -3,7 +3,7 @@
 > **Status: ✅ shipped — and extended well beyond this spec.** This is the original design
 > proposal, kept as an architecture/decision record. The live system now has **18 style presets**
 > (not 3–4), **15 block types** (not 5), path-based i18n (`/zh`), and image upload. Authoritative
-> current state: [`REFERENCE.zh.md`](REFERENCE.zh.md) + the `oracle-site-design` / `oracle-site-compose`
+> current state: [`REFERENCE.zh.md`](REFERENCE.zh.md) + the `homestead-site-design` / `homestead-site-compose`
 > skills. Principles below still hold: subtract, reuse, modular, maintainable, no duplicate systems.
 
 ## 1. Goal / Non-goal
@@ -19,7 +19,7 @@
 | `DesignProfile` + `tokens` (colors/type/radius/layout) → CSS vars in `globals.css` | the **theme/skin** layer (unchanged) |
 | `design_service.py` `INDUSTRY_PRESETS`, `profile_for_industry`, `deep_merge` | extend into style presets |
 | `/admin/design` (GET/PATCH), `/admin/design/generate`, `/admin/design/analyze-competitors` | apply themes; read a reference site (e.g. apple.ca) for palette cues |
-| `oracle-site-design` skill | upgrade into the conversational designer |
+| `homestead-site-design` skill | upgrade into the conversational designer |
 | `app/page.tsx` hardcoded sections (hero / Operating Model / Latest Blogs) | becomes the first data-driven composition |
 | `Page` content type (just built) | unrelated — pages are markdown prose; sections are structured. Keep separate. |
 
@@ -114,7 +114,7 @@ Each preset = `{ tokens (incl. mode) + sections (types/variants) + default conte
 
 ## 9. OpenClaw design skill (conversational — the "更牛" part)
 
-Upgrade `oracle-site-design` from "pass an industry" to a guided runbook:
+Upgrade `homestead-site-design` from "pass an industry" to a guided runbook:
 
 1. **Interview** (ask, don't assume): industry? a reference site or vibe (minimal / bold / warm / professional)? light or dark?
 2. **Offer 2–3 options**: preset name + hero style + palette + one-line rationale. (Optionally run `analyze-competitors` on a named reference for palette cues.)

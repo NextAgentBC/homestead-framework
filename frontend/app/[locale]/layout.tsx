@@ -106,7 +106,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               </div>
               <div className="footer-bottom">© {new Date().getFullYear()} {site.name}</div>
             </footer>
-            <ChatWidget locale={locale} messages={messages} />
+            <ChatWidget locale={locale} messages={messages} assistantName={site.assistantName} />
           </div>
         </AuthProvider>
       </body>

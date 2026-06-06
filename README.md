@@ -2,7 +2,7 @@
 
 > **Homestead** — an "Elementor, but driven entirely by chat (OpenClaw/Codex)" website framework.
 > Everything is **design tokens + composable blocks**, with zero hard-coded CSS.
-> (Internal identifiers — repo dirs, services, the `oracle-site` DB, the `oracle-site-*` skills — keep the original `oracle-site` codename; only the product name is Homestead.)
+> (Internal identifiers — repo dirs, services, the `homestead-site` DB, the `homestead-site-*` skills — keep the original `homestead-site` codename; only the product name is Homestead.)
 > Categorized capability map (APIs · fonts · 18 themes · 15 blocks · skills): [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
 
 > 🤖 **Deploying with an AI agent?** Hand it **[`AGENT-DEPLOY.md`](AGENT-DEPLOY.md)** — a headless,
@@ -23,7 +23,7 @@ https://github.com/NextAgentBC/homestead-framework
 Your human is taking a lecture where every student has:
 
 - A local computer with Codex installed.
-- SSH access to an Oracle VM through the alias `oracle-server`.
+- SSH access to an Oracle VM through the alias `your-server`.
 - OpenClaw installed on the Oracle VM.
 - A DeepSeek API key.
 - Google Workspace CLI / GWS access.
@@ -51,7 +51,7 @@ Build a reusable full-stack website framework:
 - i18n: path-based `/zh`, the agent is the translator.
 - Capture: rebuild a section from a screenshot into the flexible `section` block + a reusable pattern library.
 - UI/UX: API-driven design profile, not hard-coded theme values.
-- Live chat: a floating widget answered by a **sandboxed, tool-less 小爪** (via the host `webchat-bridge`), each exchange mirrored to the operator's Telegram, with human take-over. Setup: [`docs/deploy-new-instance.md`](docs/deploy-new-instance.md) §8 · [`ops/webchat-bridge/`](ops/webchat-bridge/README.md).
+- Live chat: a floating widget answered by a **sandboxed, tool-less assistant** (via the host `webchat-bridge`), each exchange mirrored to the operator's Telegram, with human take-over. Setup: [`docs/deploy-new-instance.md`](docs/deploy-new-instance.md) §8 · [`ops/webchat-bridge/`](ops/webchat-bridge/README.md).
 - Automation: daily AI-generated blog posts.
 - Delivery: Cloudflare Tunnel preferred, static IP + Nginx fallback.
 - Maintenance: OpenAPI contract and clear module boundaries for OpenClaw/Codex.
@@ -120,10 +120,10 @@ docker compose up -d postgres
 If Docker Compose is not available but Docker itself works:
 
 ```bash
-docker run -d --name oracle-site-postgres \
-  -e POSTGRES_DB=oracle_site \
-  -e POSTGRES_USER=oracle_site \
-  -e POSTGRES_PASSWORD=oracle_site_password \
+docker run -d --name homestead-site-postgres \
+  -e POSTGRES_DB=homestead_site \
+  -e POSTGRES_USER=homestead_site \
+  -e POSTGRES_PASSWORD=homestead_site_password \
   -p 127.0.0.1:5432:5432 \
   postgres:17-alpine
 ```
@@ -173,6 +173,8 @@ API_PUBLIC_URL=https://api.student-domain.example
 SITE_INDUSTRY=
 SITE_AUDIENCE=
 SITE_REGION=
+SITE_ASSISTANT_NAME=        # live-chat helper name; blank = follows SITE_NAME
+SITE_SEED_DEMO=true         # on an empty DB, seed a full demo site (idempotent)
 GOOGLE_CLIENT_ID=
 ADMIN_EMAILS=
 DEEPSEEK_API_KEY=
@@ -190,6 +192,15 @@ NEXT_PUBLIC_API_BASE_URL=https://api.student-domain.example/api
 NEXT_PUBLIC_SITE_URL=https://student-domain.example
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ```
+
+On first boot with an **empty database** the backend seeds a complete demo site — a
+full `SITE_INDUSTRY` home (hero, features, gallery, pricing, FAQ, CTA) plus About and
+Services pages — so a fresh deploy is a real multi-page site, not a blank shell
+(`SITE_SEED_DEMO=true`, idempotent; skipped once any content exists). Make it your own
+in the app, or tell your agent "换成医美 / turn this into a restaurant / 律所…": the
+[rebrand skill](skills/homestead-site-rebrand/SKILL.md) switches the **whole** site —
+brand name, theme, home, the About/Services pages, blog lede, SEO and the chat
+assistant — in one call, with no redeploy.
 
 ## API Contract
 
@@ -309,11 +320,11 @@ Two agent-driven capabilities; architecture in [`docs/capture-and-i18n.md`](docs
   Chinese ones). Set `SITE_LOCALES` / `SITE_DEFAULT_LOCALE` (and the frontend's
   `NEXT_PUBLIC_SITE_LOCALES`). Read localized content with `?locale=zh` on `/api/design`,
   `/api/pages*`, `/api/blogs*`; write with `?locale=zh` on the admin routes. UI chrome strings:
-  `GET /api/i18n/:locale`, `PATCH /api/admin/i18n/:locale`. Skill: `oracle-site-i18n`.
+  `GET /api/i18n/:locale`, `PATCH /api/admin/i18n/:locale`. Skill: `homestead-site-i18n`.
 - **Capture** — rebuild a section from a screenshot into the flexible, token-driven `section`
   block (so it auto-harmonizes to the theme — inspiration, never a pixel copy). Save good ones
   to the pattern library (`GET /api/patterns`, `POST /api/admin/patterns`) to grow the block
-  vocabulary with no redeploy. Skill: `oracle-site-capture`.
+  vocabulary with no redeploy. Skill: `homestead-site-capture`.
 
 ## Daily Blog Automation
 
@@ -333,35 +344,56 @@ flask --app app.main blog generate-daily --draft
 
 If `DEEPSEEK_API_KEY` is not set, the command creates a deterministic fallback post so deployment can still be tested.
 
-## Deploy To Oracle Server
+## Deploy to your server
 
 The expected SSH alias is:
 
 ```bash
-ssh oracle-server
+ssh your-server
 ```
 
 Recommended server path:
 
 ```text
-/home/ubuntu/projects/oracle-site
+/home/ubuntu/projects/homestead-site
 ```
 
 Recommended deployment steps:
 
 ```bash
-ssh oracle-server 'mkdir -p ~/projects/oracle-site'
-rsync -av --exclude node_modules --exclude .next --exclude .venv ./ oracle-server:~/projects/oracle-site/
-ssh oracle-server 'cd ~/projects/oracle-site && cp backend/.env.example backend/.env && cp frontend/.env.example frontend/.env.local'
+ssh your-server 'mkdir -p ~/projects/homestead-site'
+rsync -av --exclude node_modules --exclude .next --exclude .venv ./ your-server:~/projects/homestead-site/
+ssh your-server 'cd ~/projects/homestead-site && cp backend/.env.example backend/.env && cp frontend/.env.example frontend/.env.local'
 ```
 
 Then edit env files on the server. After env files are ready:
 
 ```bash
-ssh oracle-server 'cd ~/projects/oracle-site && docker compose up -d --build'
-ssh oracle-server 'cd ~/projects/oracle-site && docker compose ps'
-ssh oracle-server 'curl -fsS http://127.0.0.1:8000/api/health'
+ssh your-server 'cd ~/projects/homestead-site && docker compose up -d --build'
+ssh your-server 'cd ~/projects/homestead-site && docker compose ps'
+ssh your-server 'curl -fsS http://127.0.0.1:8000/api/health'
 ```
+
+### Keeping an existing database (upgrading an older instance)
+
+Database name/user now default to `homestead_site`. If you already run this site on
+the old `oracle_site` database (its data lives in the `postgres-data` volume), **keep
+it as-is — don't migrate.** Pin the old names so Compose and the backend point at your
+existing data:
+
+```bash
+# .env next to docker-compose.yml (Compose substitutes these)
+POSTGRES_DB=oracle_site
+POSTGRES_USER=oracle_site
+POSTGRES_PASSWORD=<your existing password>
+
+# backend/.env
+DATABASE_URL=postgresql+psycopg://oracle_site:<password>@postgres:5432/oracle_site
+```
+
+On boot the backend runs `db upgrade`, so an existing database simply gains the new
+`site_settings` table — your content is untouched, and the demo seed is skipped
+(it only runs on an empty DB).
 
 ## Cloudflare Decision
 

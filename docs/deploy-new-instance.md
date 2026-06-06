@@ -84,11 +84,11 @@ The backend entrypoint runs `flask db upgrade` on start, so the schema is create
 Run `cloudflared` on this server **joined to the `edge` network**, routing:
 
 ```
-mysite.example.com      ->  http://oracle-site-frontend:3000
-mysite-api.example.com  ->  http://oracle-site-backend:8000
+mysite.example.com      ->  http://homestead-site-frontend:3000
+mysite-api.example.com  ->  http://homestead-site-backend:8000
 ```
 
-(`oracle-site-frontend` / `oracle-site-backend` are the compose service aliases on `edge`.)
+(`homestead-site-frontend` / `homestead-site-backend` are the compose service aliases on `edge`.)
 Use a token-based tunnel from the Cloudflare Zero Trust dashboard, or a local config —
 see [`../ops/cloudflared/config.yml.example`](../ops/cloudflared/config.yml.example).
 
@@ -98,7 +98,7 @@ see [`../ops/cloudflared/config.yml.example`](../ops/cloudflared/config.yml.exam
 > URL (a local `:8000`/`:3000` 200 does NOT prove the tunnel works).
 
 **Fallback without Cloudflare:** the app already publishes `3000`/`8000`; put your own nginx in
-front — see [`../ops/nginx/oracle-site.conf.example`](../ops/nginx/oracle-site.conf.example).
+front — see [`../ops/nginx/homestead-site.conf.example`](../ops/nginx/homestead-site.conf.example).
 
 ## 6. First admin token (no browser)
 
@@ -111,10 +111,10 @@ must be in `ADMIN_EMAILS`.
 
 ## 7. (Optional) Point OpenClaw skills at this instance
 
-In `oracle-site-shared`, set `ORACLE_SITE_API=https://mysite-api.example.com/api` and mint a token
+In `homestead-site-shared`, set `HOMESTEAD_SITE_API=https://mysite-api.example.com/api` and mint a token
 as above. Then design/compose/blog/media/i18n skills all drive this instance.
 
-## 8. (Optional) Live chat answered by 小爪
+## 8. (Optional) Live chat answered by the assistant
 
 A floating chat widget answered by a **sandboxed, tool-less** model turn via OpenClaw, mirrored to
 the operator's Telegram, with human take-over. Needs the `openclaw` CLI + a running gateway on the
@@ -146,9 +146,9 @@ WEBCHAT_BRIDGE_TOKEN=<same as ops/webchat-bridge/.env>
 `docker-compose.yml` already gives the backend `extra_hosts: host.docker.internal:host-gateway`.
 Rebuild backend after editing env: `docker compose up -d --build backend && docker restart tunnel-cloudflared`.
 
-**d. Operator take-over skill** (so 小爪 can reply into a thread from Telegram):
+**d. Operator take-over skill** (so the assistant can reply into a thread from Telegram):
 ```bash
-openclaw skills install "$PWD/skills/oracle-site-chat" --force
+openclaw skills install "$PWD/skills/homestead-site-chat" --force
 systemctl --user restart openclaw-gateway
 ```
 
@@ -160,6 +160,6 @@ or build the frontend with `NEXT_PUBLIC_WEBCHAT_ENABLED=false`.
 
 - **Independent instance:** its own DB, content, and design — nothing shared with other deployments.
 - **Volumes** `postgres-data` + `media-data` persist across rebuilds (DB rows + uploaded images survive).
-- **No image generator needed.** Switch to your industry — `POST /api/admin/site/rebrand {"industry":"<yours>"}` (or the `oracle-site-rebrand` skill) — and the home/pages fill with a complete layout where every image slot is a **prompt-labelled placeholder**. Replace each with your own uploaded photo (`/api/admin/media`); the on-page prompt says what fits. Generating real images is optional (only if you have a generator).
+- **No image generator needed.** Switch to your industry — `POST /api/admin/site/rebrand {"industry":"<yours>"}` (or the `homestead-site-rebrand` skill) — and the home/pages fill with a complete layout where every image slot is a **prompt-labelled placeholder**. Replace each with your own uploaded photo (`/api/admin/media`); the on-page prompt says what fits. Generating real images is optional (only if you have a generator).
 - **Domain is build-time** for the frontend (step 3a); to change it, rebuild frontend.
 - Updates: `git pull` → `docker compose up -d --build` → restart cloudflared (the gotcha above).

@@ -7,7 +7,7 @@ def _csv(value: str) -> list[str]:
 
 
 def _database_url() -> str:
-    url = os.getenv("DATABASE_URL", "sqlite:///oracle_site.db")
+    url = os.getenv("DATABASE_URL", "sqlite:///homestead_site.db")
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+psycopg://", 1)
     if url.startswith("postgresql://"):
@@ -25,12 +25,22 @@ class Config:
     }
     CORS_ORIGINS = _csv(os.getenv("CORS_ORIGINS", "http://localhost:3000"))
 
-    SITE_NAME = os.getenv("SITE_NAME", "Oracle Site")
+    SITE_NAME = os.getenv("SITE_NAME", "Homestead")
     SITE_URL = os.getenv("SITE_URL", "http://localhost:3000").rstrip("/")
     API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://localhost:8000").rstrip("/")
     SITE_INDUSTRY = os.getenv("SITE_INDUSTRY", "education")
     SITE_AUDIENCE = os.getenv("SITE_AUDIENCE", "students and independent creators")
     SITE_REGION = os.getenv("SITE_REGION", "United States")
+    # Live-chat assistant's name. Blank → follows the brand name (SITE_NAME). The
+    # runtime value can be overridden per-site in the DB (SiteSettings); a rebrand
+    # updates it so the helper introduces itself as the new brand.
+    SITE_ASSISTANT_NAME = os.getenv("SITE_ASSISTANT_NAME", "")
+
+    # First-boot demo seed: when the DB has no content yet, populate a complete
+    # industry home + starter pages (About/Services/...) so a fresh deploy is a
+    # real multi-page site, not a bare framework shell. Idempotent — skips if any
+    # design/page already exists, so an owner's existing data is never touched.
+    SITE_SEED_DEMO = os.getenv("SITE_SEED_DEMO", "true").lower() == "true"
 
     # i18n — first locale is the default (base columns). Add "zh" for Chinese.
     SITE_LOCALES = _csv(os.getenv("SITE_LOCALES", "en,zh")) or ["en"]
@@ -51,7 +61,7 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
     ADMIN_EMAILS = set(_csv(os.getenv("ADMIN_EMAILS", "")))
 
-    JWT_ISSUER = os.getenv("JWT_ISSUER", "oracle-site")
+    JWT_ISSUER = os.getenv("JWT_ISSUER", "homestead-site")
     JWT_EXPIRES = timedelta(hours=int(os.getenv("JWT_EXPIRES_HOURS", "168")))
 
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
@@ -64,8 +74,9 @@ class Config:
     SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 
-    # Website live chat — answered by the (tool-less) 小爪 brain on the host
-    # webchat-bridge, which also mirrors each exchange to the operator's Telegram.
+    # Website live chat — answered by a (tool-less) support-assistant brain on the
+    # host webchat-bridge, which can also mirror each exchange to your operator
+    # Telegram. Optional: leave WEBCHAT_BRIDGE_URL blank to disable live chat.
     WEBCHAT_ENABLED = os.getenv("WEBCHAT_ENABLED", "true").lower() == "true"
     WEBCHAT_BRIDGE_URL = os.getenv("WEBCHAT_BRIDGE_URL", "").rstrip("/")
     WEBCHAT_BRIDGE_TOKEN = os.getenv("WEBCHAT_BRIDGE_TOKEN", "")

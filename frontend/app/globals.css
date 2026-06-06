@@ -1,5 +1,5 @@
 /* =====================================================================
-   Oracle Site — design system
+   Homestead — design system
    Theme values (colors / fonts / radius / layout) arrive from the API as
    inline CSS variables on <html>. This stylesheet adds the *expression*:
    type scale, spacing rhythm, depth, components — all driven by those vars.

@@ -6,23 +6,23 @@
 
 把这个 repo 交给你的 **Codex**，让它读这份文档帮你一起完成。每个步骤都标了角色：
 
-- 🤖 **可以让 Codex 帮你做**：跑命令、验证、通过 `ssh oracle-server` 在服务器上执行。
+- 🤖 **可以让 Codex 帮你做**：跑命令、验证、通过 `ssh your-server` 在服务器上执行。
 - 🧑 **必须你本人在浏览器里操作**：买域名、注册账号、Google 控制台点选、生成密码。Codex 只能指导，不能替你点。
 
 > ⏰ **至少提前 3 天开始**，第 1 步（域名）务必最先做——DNS 生效要等几小时到一天。
 > 🔒 所有密钥/密码都是私密的：别发群里、别提交到 GitHub。课上私下填进 `.env` 即可。
 
-你应该已经具备：本地装好 **Codex**、能 `ssh oracle-server`、服务器上装了 **OpenClaw** 和 **gws**、有 **DeepSeek API Key**。下面第 0 步会逐项验证。
+你应该已经具备：本地装好 **Codex**、能 `ssh your-server`、服务器上装了 **OpenClaw** 和 **gws**、有 **DeepSeek API Key**。下面第 0 步会逐项验证。
 
 ---
 
 ## 第 0 步 · 验证你已有的工具 🤖
 
-把这些交给 Codex 逐条跑（它会通过 `ssh` 在 `oracle-server` 上执行）。
+把这些交给 Codex 逐条跑（它会通过 `ssh` 在 `your-server` 上执行）。
 
 **① SSH + Docker**
 ```bash
-ssh oracle-server "echo OK && docker --version && docker compose version"
+ssh your-server "echo OK && docker --version && docker compose version"
 ```
 看到 `OK` + 两个版本号 = 通过。报错就记下来问老师，别自己装。
 
@@ -40,9 +40,9 @@ curl https://api.deepseek.com/chat/completions \
 ```
 返回带 `"content"` 的 JSON = 通过；`401` = key 不对。
 
-**④ OpenClaw** 能在 `oracle-server` 上启动（按你装好的方式确认）。
+**④ OpenClaw** 能在 `your-server` 上启动（按你装好的方式确认）。
 
-**⑤ gws（Google Workspace CLI）** —— 在装了 gws 的机器（通常是 `oracle-server`）上：
+**⑤ gws（Google Workspace CLI）** —— 在装了 gws 的机器（通常是 `your-server`）上：
 ```bash
 gws auth status     # 记下输出里的 project_id（第 2 步要用）
 ```
@@ -147,7 +147,7 @@ SITE_NAME / 行业 / 受众 / 地区:  ……
 
 ## ✅ 来上课前，确认每一项都能勾上
 
-- [ ] `ssh oracle-server` 能连，服务器有 Docker + Compose
+- [ ] `ssh your-server` 能连，服务器有 Docker + Compose
 - [ ] 本地 `codex` 能用
 - [ ] DeepSeek key 测试返回正常（非 401）
 - [ ] OpenClaw 能启动

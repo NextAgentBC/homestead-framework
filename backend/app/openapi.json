@@ -24,7 +24,7 @@
     "/page-templates": { "get": { "summary": "Page recipes — recommended block composition per page type (home/about/services/solutions/pricing/landing)" } },
     "/newsletter/subscribe": { "post": { "summary": "Subscribe to newsletter" } },
     "/contact": { "post": { "summary": "Send contact message (also pings the operator on Telegram)" } },
-    "/chat": { "post": { "summary": "Website live chat — send a visitor message ({sessionId?, message, locale?}); answered by the sandboxed tool-less 小爪 brain. Returns {sessionId, reply}. Rate-limited." } },
+    "/chat": { "post": { "summary": "Website live chat — send a visitor message ({sessionId?, message, locale?}); answered by the sandboxed tool-less assistant brain. Returns {sessionId, reply}. Rate-limited." } },
     "/chat/{sessionId}": { "get": { "summary": "Website live chat — full transcript for a session id" } },
     "/admin/blogs/generate": { "post": { "summary": "Generate AI blog post" } },
     "/admin/blogs": { "post": { "summary": "Create blog post" } },

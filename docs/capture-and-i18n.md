@@ -61,7 +61,7 @@ it becomes insertable everywhere, like the coded blocks.
 hand-coded block type (manifest + renderer) via a normal PR. Not required for the
 agent loop.
 
-### The skill — `oracle-site-capture`
+### The skill — `homestead-site-capture`
 1. View the screenshot. 2. `GET /api/design` (tokens) + `GET /api/blocks` (catalog).
 3. If it maps cleanly to an existing block → compose that, harmonized. Else → emit
 a `section` DSL block. 4. Insert via compose (optionally `batch` to also fill the
@@ -110,7 +110,7 @@ surfaced in `GET /api/site` as `locales` + `defaultLocale`.
 - SEO: `hreflang` alternates in metadata; `sitemap.ts` lists every locale; canonical
   per locale.
 
-### The skill — `oracle-site-i18n`
+### The skill — `homestead-site-i18n`
 The agent *is* the translator. Verbs: "translate the home/a page/a post to zh"
 (read default-locale content → write `i18n.zh`), "fix the Chinese nav/footer" (PATCH
 UI messages), "add a Chinese blog post". compose/pages/blog skills gain a `locale`

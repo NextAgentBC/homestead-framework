@@ -1,9 +1,0 @@
-[Unit]
-Description=Generate daily Oracle Site blog
-
-[Service]
-Type=oneshot
-WorkingDirectory=/opt/oracle-site/backend
-EnvironmentFile=/opt/oracle-site/backend/.env
-ExecStart=/opt/oracle-site/backend/.venv/bin/flask --app app.main blog generate-daily
-

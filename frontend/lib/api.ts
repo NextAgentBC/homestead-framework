@@ -4,6 +4,7 @@ export type Site = {
   industry: string;
   audience: string;
   region: string;
+  assistantName: string;
   googleClientId: string;
   locales: string[];
   defaultLocale: string;
@@ -229,11 +230,12 @@ export async function getSite(): Promise<Site> {
     return data.item;
   } catch {
     return {
-      name: "Oracle Site",
+      name: "Homestead",
       url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
       industry: "education",
       audience: "students and independent creators",
       region: "United States",
+      assistantName: "Homestead",
       googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
       locales: (process.env.NEXT_PUBLIC_SITE_LOCALES || "en,zh").split(",").map((s) => s.trim()).filter(Boolean),
       defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en"

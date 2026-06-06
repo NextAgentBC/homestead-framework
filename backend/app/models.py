@@ -165,6 +165,33 @@ class DesignProfile(TimestampMixin, db.Model):
         }
 
 
+class SiteSettings(TimestampMixin, db.Model):
+    """Singleton (id=1) runtime site identity — brand name, industry, audience,
+    region, and the live-chat assistant's name. Stored in the DB (not just env)
+    so a rebrand / "switch industry" can change the whole site's identity —
+    nav + footer brand, blog lede, SEO, and the chat persona — with **no
+    redeploy**. Any blank field falls back to the matching ``SITE_*`` env; see
+    ``services.site_service.effective()``. The ``assistant_name`` falls back to
+    the brand name when blank (so the chat helper introduces itself as the site)."""
+    __tablename__ = "site_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    site_name = db.Column(db.String(255), nullable=False, default="")
+    industry = db.Column(db.String(255), nullable=False, default="")
+    audience = db.Column(db.String(255), nullable=False, default="")
+    region = db.Column(db.String(255), nullable=False, default="")
+    assistant_name = db.Column(db.String(255), nullable=False, default="")
+
+    def to_dict(self) -> dict:
+        return {
+            "siteName": self.site_name,
+            "industry": self.industry,
+            "audience": self.audience,
+            "region": self.region,
+            "assistantName": self.assistant_name,
+        }
+
+
 class UiMessages(TimestampMixin, db.Model):
     """UI chrome strings (nav/footer/buttons) per locale, so even the framework
     labels are not hard-coded — the agent can edit them with no redeploy. The

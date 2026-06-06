@@ -8,6 +8,7 @@ from .auth import issue_jwt
 from .extensions import db
 from .models import BlogPost, User
 from .routes.admin import _create_post
+from .services import site_service
 from .services.ai_service import generate_blog_post
 
 @click.group("blog")
@@ -60,3 +61,20 @@ def issue_token(email: Optional[str], days: Optional[int]):
     if days is not None:
         current_app.config["JWT_EXPIRES"] = timedelta(days=days)
     click.echo(issue_jwt(user))
+
+
+@click.group("site")
+def site_cli():
+    """Site bootstrap / maintenance."""
+
+
+@site_cli.command("seed")
+@click.option("--force", is_flag=True, help="Add any missing starters even if some content already exists.")
+def seed(force: bool):
+    """Idempotently populate a fresh site so a new deploy is a real multi-page site,
+    not a bare framework shell: a complete industry home (from SITE_INDUSTRY) plus
+    starter pages. Skips once content exists (unless --force); existing data is never
+    overwritten."""
+    created = site_service.seed_demo(force=force)
+    click.echo(f"seed: created {', '.join(created)}." if created
+               else "seed: content already present — skipping.")

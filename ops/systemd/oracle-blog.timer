@@ -1,9 +1,0 @@
-[Unit]
-Description=Daily Oracle Site blog timer
-
-[Timer]
-OnCalendar=*-*-* 07:30:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target

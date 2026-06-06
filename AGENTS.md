@@ -11,6 +11,6 @@ Use this file when operating inside this repository.
 - Do not commit `.env`, `.env.local`, `.venv`, `.next`, `node_modules`, or local databases.
 - Before saying the project works, run backend route/migration checks and frontend typecheck/build.
 - Run `pytest -q` from `backend/` before reporting backend changes as complete.
-- For deployment, target `oracle-server:/home/ubuntu/projects/oracle-site` unless the human gives another path.
+- For deployment, target `your-server:/home/ubuntu/projects/homestead-site` unless the human gives another path.
 - Prefer Cloudflare Tunnel over direct public Nginx exposure.
-- Student prerequisites live in `docs/student-prep.md`. You may run/verify steps marked 🤖 (e.g. `ssh oracle-server` checks, `gws auth status`); steps marked 🧑 require the human in a browser (domain, Cloudflare signup, Google OAuth Web client, SMTP app password) — guide, do not attempt them.
+- Student prerequisites live in `docs/student-prep.md`. You may run/verify steps marked 🤖 (e.g. `ssh your-server` checks, `gws auth status`); steps marked 🧑 require the human in a browser (domain, Cloudflare signup, Google OAuth Web client, SMTP app password) — guide, do not attempt them.

@@ -10,7 +10,7 @@ const POLL_MS = 5000;
 
 type Msg = { id?: number; role: string; text: string };
 
-export function ChatWidget({ locale, messages }: { locale: string; messages: Messages }) {
+export function ChatWidget({ locale, messages, assistantName }: { locale: string; messages: Messages; assistantName?: string }) {
   const [open, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState("");
   const [server, setServer] = useState<Msg[]>([]);
@@ -128,7 +128,7 @@ export function ChatWidget({ locale, messages }: { locale: string; messages: Mes
           </header>
 
           <div className="chat-log" ref={logRef}>
-            {shown.length === 0 && <div className="chat-greeting">{t(messages, "chat.greeting")}</div>}
+            {shown.length === 0 && <div className="chat-greeting">{t(messages, "chat.greeting", { assistant: assistantName || "" })}</div>}
             {shown.map((m, i) => (
               <div key={m.id ?? `local-${i}`} className={`chat-msg ${m.role === "visitor" ? "is-visitor" : "is-agent"}`}>
                 {m.text}

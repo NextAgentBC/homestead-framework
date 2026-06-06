@@ -8,8 +8,8 @@ Type=simple
 # openclaw needs HOME (~/.openclaw) and node on PATH; mirror the gateway unit's PATH.
 Environment=HOME=/home/ubuntu
 Environment=PATH=/usr/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/home/ubuntu/bin:/home/ubuntu/.nix-profile/bin:/home/ubuntu/.local/share/pnpm:/usr/local/bin:/bin
-EnvironmentFile=/home/ubuntu/projects/oracle-site/ops/webchat-bridge/.env
-ExecStart=/usr/bin/python3 /home/ubuntu/projects/oracle-site/ops/webchat-bridge/bridge.py
+EnvironmentFile=/home/ubuntu/projects/homestead-site/ops/webchat-bridge/.env
+ExecStart=/usr/bin/python3 /home/ubuntu/projects/homestead-site/ops/webchat-bridge/bridge.py
 Restart=always
 RestartSec=3
 

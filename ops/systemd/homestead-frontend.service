@@ -1,0 +1,14 @@
+[Unit]
+Description=Homestead Next.js Frontend
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/homestead-site/frontend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start -- --hostname 127.0.0.1 --port 3000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

@@ -137,7 +137,7 @@ def fetch_competitor_snapshot(url: str) -> dict:
     try:
         response = requests.get(
             url,
-            headers={"User-Agent": "OracleSiteCompetitorAnalyzer/0.1"},
+            headers={"User-Agent": "HomesteadCompetitorAnalyzer/0.1"},
             allow_redirects=False,
             stream=True,
             timeout=12,

@@ -1,11 +1,11 @@
 # Homestead 系统参考（分类总览）
 
 > 一句话：这是一套 **「Elementor，但用 Telegram 聊天操作」** 的网站框架——所有外观与结构都是
-> **token + block**，组件零硬编码 CSS，小爪（OpenClaw）通过下面这套 API 即时改站。
+> **token + block**，组件零硬编码 CSS，OpenClaw通过下面这套 API 即时改站。
 > 本文件是「能力面」的权威清单：**API / 字体 / 主题 / 积木 / 其它维度**。改了代码记得同步本文件。
 
-- 基地址：`$ORACLE_SITE_API`（线上 `https://homestead-api.nextagent.ca/api`）
-- 鉴权：**公开读**免 token；**管理写**（`/admin/*`）需要 `Authorization: Bearer $ORACLE_SITE_TOKEN`
+- 基地址：`$HOMESTEAD_SITE_API`（线上 `https://your-api.example.com/api`）
+- 鉴权：**公开读**免 token；**管理写**（`/admin/*`）需要 `Authorization: Bearer $HOMESTEAD_SITE_TOKEN`
 - 响应约定：单个 `{ "item": {...} }` · 列表 `{ "items": [...] }` · 出错 `{ "error": { "code", "message" } }`
 - 改动即时：design / compose / i18n / media 的写操作**无需重部署**，下次加载即生效
 
@@ -39,7 +39,7 @@
 | POST | `/auth/google` | Google 登录 / 注册 |
 | POST | `/newsletter/subscribe` | 订阅邮件列表 |
 | POST | `/contact` | 联系表单（同时推送到运营 Telegram） |
-| POST | `/chat` | 在线聊天：访客消息 `{sessionId?, message}`，由**沙箱无工具小爪**应答，返回 `{sessionId, reply}`（有限流） |
+| POST | `/chat` | 在线聊天：访客消息 `{sessionId?, message}`，由**沙箱无工具客服助手**应答，返回 `{sessionId, reply}`（有限流） |
 | GET | `/chat/{sessionId}` | 在线聊天：某会话完整记录 |
 
 ### 管理写（需 admin token，前缀 `/admin`）
@@ -104,7 +104,7 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/admin/chat` `?status=` · `/admin/chat/{sessionId}` | 列出会话 / 读某会话完整记录 |
-| POST | `/admin/chat/{sessionId}/reply` | 人工 / 小爪**接管**，回复直接进访客聊天窗 |
+| POST | `/admin/chat/{sessionId}/reply` | 人工 / 客服助手**接管**，回复直接进访客聊天窗 |
 | POST | `/admin/chat/{sessionId}/close` | 关闭（`{reopen:true}` 重开）会话 |
 
 > 💬 **聊天大脑是无工具的一次性模型调用**（host `webchat-bridge`）：没有 shell / 文件 / 工具面，注入也无法执行；prompt 只含公开站点知识 + 本访客对话，不碰私有记忆。每段对话镜像到运营 Telegram，可随时接管。
@@ -215,28 +215,28 @@
 
 - **语言**：`en`（默认）· `zh`，路径式 `/zh`（利于 SEO）。内容译文存各模型的 `i18n` JSON 列，界面文案走 `/i18n`。
 - **媒体**：仅上传，`png/jpg/gif/webp`，≤ 10MB；魔术字节校验；存 `media-data` 卷；返回绝对 URL；CDN 缓存 24h（文件名唯一不可变）。
-- **每种 block 各有一个轻量触发技能**（`oracle-site-block-*`，opt-in 默认不装），让「加个价格表 / add an FAQ」精准路由，最终都委托 compose 引擎。
-- **在线聊天**：右下角气泡，由**沙箱无工具小爪**实时应答（host `webchat-bridge` → `openclaw infer`，零工具面、防注入），中英文自适应；每段对话镜像到运营 Telegram，可随时接管；contact 表单也会推送线索到 Telegram。
+- **每种 block 各有一个轻量触发技能**（`homestead-site-block-*`，opt-in 默认不装），让「加个价格表 / add an FAQ」精准路由，最终都委托 compose 引擎。
+- **在线聊天**：右下角气泡，由**沙箱无工具客服助手**实时应答（host `webchat-bridge` → `openclaw infer`，零工具面、防注入），中英文自适应；每段对话镜像到运营 Telegram，可随时接管；contact 表单也会推送线索到 Telegram。
 
 ---
 
-## 五、小爪技能 ↔ API（OpenClaw 命令地图）
+## 五、OpenClaw 技能 ↔ API（命令地图）
 
 | 域 | 技能（Telegram 命令） | 主要 API |
 |---|---|---|
 | 入口 | `website`（`/website`） | 路由到下面各技能 |
-| 基础 | `oracle-site-shared`（先读） | `$ORACLE_SITE_API` + token |
-| 设计 | `oracle-site-design`（`/oracle_site_design`） | `/admin/design*`、`/design` |
-| 换行业 | `oracle-site-rebrand`（`/oracle_site_rebrand`） | `/admin/site/rebrand`、`/admin/consistency`（循环修到 `ok:true`） |
-| 编排 | `oracle-site-compose`（`/oracle_site_compose`） | `/admin/compose/*`、`/blocks`、`/admin/surfaces` |
-| 捕获 | `oracle-site-capture`（`/oracle_site_capture`） | `/admin/compose/*`、`/admin/patterns`、`/patterns` |
-| 内容·博客 | `oracle-site-blog`（`/oracle_site_blog`） | `/admin/blogs*`、`/blogs` |
-| 内容·页面 | `oracle-site-pages`（`/oracle_site_pages`） | `/admin/pages*`、`/pages` |
-| 双语 | `oracle-site-i18n`（`/oracle_site_i18n`） | `/admin/i18n`、`?locale=` 系列、`/i18n` |
-| 媒体 | `oracle-site-media`（`/oracle_site_media`） | `/admin/media*`、`/media` |
-| 互动 | `oracle-site-newsletter`（`/oracle_site_newsletter`） | `/newsletter/subscribe`、`/contact` |
-| 在线客服 | `oracle-site-chat`（接管网站聊天） | `/admin/chat*`、`/chat` |
-| 运维 | `oracle-site-ops`（`/oracle_site_ops`） | `/health`、docker / 部署 |
+| 基础 | `homestead-site-shared`（先读） | `$HOMESTEAD_SITE_API` + token |
+| 设计 | `homestead-site-design`（`/homestead_site_design`） | `/admin/design*`、`/design` |
+| 换行业 | `homestead-site-rebrand`（`/homestead_site_rebrand`） | `/admin/site/rebrand`、`/admin/consistency`（循环修到 `ok:true`） |
+| 编排 | `homestead-site-compose`（`/homestead_site_compose`） | `/admin/compose/*`、`/blocks`、`/admin/surfaces` |
+| 捕获 | `homestead-site-capture`（`/homestead_site_capture`） | `/admin/compose/*`、`/admin/patterns`、`/patterns` |
+| 内容·博客 | `homestead-site-blog`（`/homestead_site_blog`） | `/admin/blogs*`、`/blogs` |
+| 内容·页面 | `homestead-site-pages`（`/homestead_site_pages`） | `/admin/pages*`、`/pages` |
+| 双语 | `homestead-site-i18n`（`/homestead_site_i18n`） | `/admin/i18n`、`?locale=` 系列、`/i18n` |
+| 媒体 | `homestead-site-media`（`/homestead_site_media`） | `/admin/media*`、`/media` |
+| 互动 | `homestead-site-newsletter`（`/homestead_site_newsletter`） | `/newsletter/subscribe`、`/contact` |
+| 在线客服 | `homestead-site-chat`（接管网站聊天） | `/admin/chat*`、`/chat` |
+| 运维 | `homestead-site-ops`（`/homestead_site_ops`） | `/health`、docker / 部署 |
 
 ---
 *自检：`backend/api_audit.py`（进程内 64/64，覆盖全部端点 + 鉴权 + 错误分支）。接口契约见 `backend/app/openapi.json`。*

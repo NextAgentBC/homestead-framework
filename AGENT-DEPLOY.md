@@ -99,7 +99,7 @@ docker compose exec -T backend flask --app app.main token issue --email "$ADMIN_
 Report back to the human:
 - ✅ `https://SITE_DOMAIN` is live (verify passed)
 - the admin token (for `Authorization: Bearer <jwt>` and the OpenClaw skills)
-- to drive the site by chat: point `oracle-site-shared`'s `ORACLE_SITE_API` at `https://API_DOMAIN/api`
+- to drive the site by chat: point `homestead-site-shared`'s `HOMESTEAD_SITE_API` at `https://API_DOMAIN/api`
 
 ---
 
@@ -113,5 +113,5 @@ Report back to the human:
   `docker compose up -d --build frontend`, restart the tunnel.
 - **Updates:** `git pull && docker compose up -d --build && docker restart ${TUNNEL_NAME}-cloudflared`.
 - **No-tunnel fallback:** the app also publishes ports `3000`/`8000`; front it with your own
-  nginx (`ops/nginx/oracle-site.conf.example`) if you'd rather not use Cloudflare.
+  nginx (`ops/nginx/homestead-site.conf.example`) if you'd rather not use Cloudflare.
 - Full human reference: [`docs/deploy-new-instance.md`](docs/deploy-new-instance.md) · contract: [`docs/api-contract.md`](docs/api-contract.md).

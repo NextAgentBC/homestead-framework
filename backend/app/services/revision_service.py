@@ -7,7 +7,7 @@ A "surface" is an editable thing:
                       captured on a theme switch / token change
 
 Every compose mutation and design change records the **prior** state here, so
-the operator (or 小爪) can undo the last change or jump back to a kept point — no
+the operator (or the assistant) can undo the last change or jump back to a kept point — no
 redeploy. History is capped per (surface, locale) so it can't grow without bound.
 
 This module owns persistence only; the admin routes decide *what* to snapshot and

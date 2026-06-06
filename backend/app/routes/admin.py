@@ -18,9 +18,13 @@ from ..models import BlockPattern, BlogPost, ChatConversation, ChatMessage, Desi
 from ..services.ai_service import generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
 from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
-from ..services import block_service, consistency_service, revision_service
+from ..services import block_service, consistency_service, revision_service, site_service
 
 bp = Blueprint("admin", __name__)
+
+# Starter pages a fresh site seeds and a rebrand rebuilds from their templates so
+# they track the new industry — one source of truth in site_service.
+_STANDARD_PAGE_SLUGS = site_service.STARTER_SLUGS
 
 
 def _admin_locale():
@@ -314,17 +318,68 @@ def site_rebrand():
     profile.i18n = _drop_locale_sections(profile.i18n)
     flag_modified(profile, "i18n")
 
+    # Site identity follows the rebrand: industry always; brand + audience when
+    # given. The whole site (nav/footer brand, blog lede, SEO, chat persona) reads
+    # this at runtime, so it all flips with no redeploy.
+    settings = site_service.get_or_create_row()
+    settings.industry = new_industry
+    if data.get("brandName"):
+        settings.site_name = data["brandName"]
+    if data.get("audience"):
+        settings.audience = data["audience"]
+
+    # Rebuild the standard starter pages (about/services) from their templates so
+    # they match the new theme instead of carrying old-industry copy; drop stale
+    # per-locale section overlays everywhere. Each touched page is snapshotted, so
+    # one `undo` reverts it. Custom pages keep their content (only stale locale
+    # overlays are cleared) — the audit then lists the copy still to rewrite.
     pages_touched = 0
     for page in Page.query.all():
-        if any("sections" in (e or {}) for e in (page.i18n or {}).values()):
-            revision_service.record(f"page:{page.slug}", "", "sections", page.sections or [], f"rebrand → {generated['name']}")
-            page.i18n = _drop_locale_sections(page.i18n)
-            flag_modified(page, "i18n")
-            pages_touched += 1
+        has_locale_sections = any("sections" in (e or {}) for e in (page.i18n or {}).values())
+        is_standard = page.slug in _STANDARD_PAGE_SLUGS
+        if not (has_locale_sections or is_standard):
+            continue
+        revision_service.record(f"page:{page.slug}", "", "sections", page.sections or [], f"rebrand → {generated['name']}")
+        if is_standard:
+            rebuilt = block_service.build_page_template(page.slug)
+            if rebuilt:
+                page.sections = rebuilt
+        page.i18n = _drop_locale_sections(page.i18n)
+        flag_modified(page, "i18n")
+        pages_touched += 1
 
     db.session.commit()
     return {"item": profile.to_dict(), "pagesTouched": pages_touched,
+            "site": site_service.effective(),
             "imagery": imagery, "audit": _audit_now(profile, new_industry)}
+
+
+@bp.get("/site/settings")
+@require_auth(admin=True)
+def get_site_settings():
+    """Stored site identity (a blank field falls back to its env default) plus the
+    effective values the site is actually using right now."""
+    row = site_service.get_row()
+    return {"item": {"stored": row.to_dict() if row else {}, "effective": site_service.effective()}}
+
+
+@bp.patch("/site/settings")
+@require_auth(admin=True)
+def update_site_settings():
+    """Set any of brand name / industry / audience / region / assistant name at
+    runtime — nav, footer, blog lede, SEO and the chat persona pick it up with no
+    redeploy. Send a blank string to fall a field back to its env default."""
+    data = request.get_json(silent=True) or {}
+    row = site_service.get_or_create_row()
+    fields = {"siteName": "site_name", "industry": "industry", "audience": "audience",
+              "region": "region", "assistantName": "assistant_name"}
+    changed = []
+    for key, attr in fields.items():
+        if key in data and isinstance(data[key], str):
+            setattr(row, attr, data[key].strip())
+            changed.append(key)
+    db.session.commit()
+    return {"item": {"stored": row.to_dict(), "effective": site_service.effective(), "changed": changed}}
 
 
 @bp.post("/design/analyze-competitors")
@@ -975,7 +1030,7 @@ def upload_media():
             if not url.lower().startswith(("http://", "https://")):
                 return _media_error("url must be http(s)")
             try:
-                req = urllib.request.Request(url, headers={"User-Agent": "oracle-site-media/1.0"})
+                req = urllib.request.Request(url, headers={"User-Agent": "homestead-site-media/1.0"})
                 with urllib.request.urlopen(req, timeout=15) as resp:
                     raw = resp.read(max_bytes + 1)
             except Exception as exc:
@@ -1063,8 +1118,12 @@ def _chat_or_404(session_id: str):
 @bp.get("/chat")
 @require_auth(admin=True)
 def chat_list():
-    """List website chat conversations (newest activity first). ?status=open|closed."""
+    """List website chat conversations (newest activity first).
+    ?status=open|closed · ?awaiting=1 → only threads whose last message is from the
+    visitor (waiting for a human/operator reply) — the take-over inbox to poll."""
     status = (request.args.get("status") or "").strip()
+    awaiting = (request.args.get("awaiting") or "").strip().lower() in ("1", "true", "yes", "visitor")
+    limit = max(1, min(int(request.args.get("limit", "100")), 500))
     query = ChatConversation.query
     if status:
         query = query.filter_by(status=status)
@@ -1073,10 +1132,15 @@ def chat_list():
             ChatConversation.last_message_at.desc().nullslast(),
             ChatConversation.created_at.desc(),
         )
-        .limit(int(request.args.get("limit", "100")))
+        .limit(500 if awaiting else limit)
         .all()
     )
-    return {"items": [c.to_card_dict() for c in convos], "meta": {"count": len(convos)}}
+    cards = [c.to_card_dict() for c in convos]
+    if awaiting:
+        # "awaiting a human" = the most recent message is the visitor's (the AI/operator
+        # hasn't answered it yet). Computed from the card so it's one source of truth.
+        cards = [c for c in cards if c.get("lastRole") == "visitor"][:limit]
+    return {"items": cards, "meta": {"count": len(cards), "awaiting": awaiting}}
 
 
 @bp.get("/chat/<session_id>")
@@ -1091,7 +1155,7 @@ def chat_detail(session_id: str):
 @bp.post("/chat/<session_id>/reply")
 @require_auth(admin=True)
 def chat_operator_reply(session_id: str):
-    """Inject a human/小爪 reply into a web chat (take-over). It appears in the
+    """Inject a human/assistant reply into a web chat (take-over). It appears in the
     visitor's widget on next poll and is included in the AI's future context."""
     convo = _chat_or_404(session_id)
     if convo is None:

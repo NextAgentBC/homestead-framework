@@ -41,7 +41,7 @@ export function GoogleLoginBox() {
               const result = await postJson<AuthResponse>("/auth/google", {
                 credential: credentialResponse.credential
               });
-              localStorage.setItem("oracle_site_token", result.item.token);
+              localStorage.setItem("homestead_site_token", result.item.token);
               setUser(result.item.user);
               setMessage("Login successful.");
             }}

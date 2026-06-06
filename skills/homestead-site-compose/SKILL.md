@@ -1,0 +1,125 @@
+---
+name: homestead-site-compose
+description: "Compose and edit any Homestead page from blocks by natural language — add / move / edit / remove / duplicate sections on the home page or any page, one block at a time. Manifest-driven: discovers the available blocks from the API and validates before writing. Triggers (zh+en): '加一个模块/板块/section', 'add a pricing section / add testimonials / add an FAQ', '把 FAQ 移到 pricing 上面 / reorder / move ... above/below', '改第N个/把标题改成/改文案/change the headline/换个布局变体', '删掉那个板块/去掉 logo 墙/remove the ...', '复制那个板块/duplicate', '首页有哪些模块/这个页面结构/list blocks', '有哪些可用 block/what blocks can I add'."
+metadata:
+  version: 0.1.0
+  openclaw:
+    category: "website"
+    requires:
+      bins:
+        - curl
+        - jq
+---
+
+# Homestead — Compose (block-level page editing)
+
+> Prerequisite: `../homestead-site-shared/SKILL.md` for `$HOMESTEAD_SITE_API` + `$HOMESTEAD_SITE_TOKEN`.
+
+Every page is an ordered list of **blocks** — `{id, type, variant, content}`. This skill edits that list **one block at a time, by stable id**, on:
+
+- **`home`** — the home page (the active design profile), or
+- **`<page-slug>`** — any page, e.g. `about`, `services`.
+
+Theme (colors / fonts / template) is a different skill — `homestead-site-design`. This one is **structure**: which blocks, in what order, with what content.
+
+## 1. Discover, then list (do this before any edit)
+
+Catalog — what blocks exist, their variants and fields (public, no token):
+```bash
+curl -s "$HOMESTEAD_SITE_API/blocks" | jq '.items[] | {type, variants, fields: [.fields[].key]}'
+```
+Current blocks on a target — **get the ids you'll edit**:
+```bash
+curl -s "$HOMESTEAD_SITE_API/admin/compose/home/blocks" \
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" | jq '.item.blocks'
+# -> [{ "id":"b_1a2b3c4d", "type":"hero", "variant":"centered", "title":"...", "items":null }, ...]
+```
+
+## 2. Edit recipes
+
+Every write returns `{ "item": <the block>, "page": { "blocks": [...] } }` so you can confirm.
+
+**Add** — `position` is `start` | `end` | an index | `after:<id>` | `before:<id>`. A new block is scaffolded with sensible defaults, so it looks complete immediately; pass `content` to override:
+```bash
+curl -s -X POST "$HOMESTEAD_SITE_API/admin/compose/home/blocks" \
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":"testimonials","position":"after:b_1a2b3c4d","content":{"heading":"Loved by teams"}}'
+```
+
+**Edit** — `content` deep-merges; pass `"replaceContent":true` to overwrite; `variant` changes the layout:
+```bash
+curl -s -X PATCH "$HOMESTEAD_SITE_API/admin/compose/home/blocks/b_1a2b3c4d" \
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"variant":"centered","content":{"headline":"Books you can trust"}}'
+```
+
+**Move / Duplicate / Remove**:
+```bash
+curl -s -X POST   "$HOMESTEAD_SITE_API/admin/compose/home/blocks/b_1a2b3c4d/move"      -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" -d '{"position":"before:b_5e6f7a8b"}'
+curl -s -X POST   "$HOMESTEAD_SITE_API/admin/compose/home/blocks/b_1a2b3c4d/duplicate" -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN"
+curl -s -X DELETE "$HOMESTEAD_SITE_API/admin/compose/home/blocks/b_1a2b3c4d"           -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN"
+```
+
+## 3. Editing a single item inside a list (important)
+
+Nested **objects** merge (e.g. `content.cta`), but **arrays replace wholesale** (e.g. `content.items`, a tier's `features`). To change "the 2nd pricing tier price", read the block, edit the array, send it back:
+```bash
+ITEMS=$(curl -s "$HOMESTEAD_SITE_API/admin/compose/home/blocks" -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" \
+  | jq -c '.item.blocks')              # find the pricing block id first, then read full content via list
+# read full content of one block is via the page list above; edit the items array, then:
+curl -s -X PATCH "$HOMESTEAD_SITE_API/admin/compose/home/blocks/b_pricing01" \
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"content":{"items":[ ...full edited items array... ]}}'
+```
+
+## 3.5 Batch (multi-step / Telegram) & discovery
+
+A single chat request is usually several edits. Prefer **one batch call** over many
+single calls — it's atomic, so a half-built page can't be left behind.
+
+```bash
+# "Make the home a pricing page: hero + tiers + FAQ, drop the old CTA"
+curl -s -X POST "$HOMESTEAD_SITE_API/admin/compose/home/batch" \
+  -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"atomic":true,"ops":[
+    {"op":"add","type":"hero","content":{"headline":"Simple pricing"},"position":"start"},
+    {"op":"add","type":"pricing","position":"end"},
+    {"op":"add","type":"faq","position":"end"},
+    {"op":"remove","id":"b_oldcta"}
+  ]}'
+```
+`atomic` (default true) = all-or-nothing; on failure nothing is saved and the
+response has `failedAt` + per-op `results` — report which step failed and retry.
+
+Discover everything editable (home + all pages) before picking a target:
+```bash
+curl -s "$HOMESTEAD_SITE_API/admin/surfaces" -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" \
+  | jq '.items[] | {target, kind, status, locales, blocks: [.blocks[].type]}'
+```
+
+## 3.6 Locales & patterns
+
+**Locales** — add `?locale=zh` to any compose call (add/update/move/batch/…) to edit
+that locale's copy of the page instead of the default. On first edit it's seeded from
+the default-locale blocks (same ids), so you translate in place. Full guide:
+`../homestead-site-i18n/SKILL.md`.
+
+**Patterns** — insert a saved section pattern instead of a typed block:
+```bash
+curl -s -X POST "$HOMESTEAD_SITE_API/admin/compose/home/blocks" -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN" -H "Content-Type: application/json" \
+  -d '{"pattern":"how-it-works-3-steps","position":"end"}'      # from GET /patterns
+```
+Capturing a section from a screenshot (and the flexible `section` block) lives in
+`../homestead-site-capture/SKILL.md`.
+
+**Per-block skills:** each block type also has a thin trigger skill
+(`homestead-site-block-hero`, `…-pricing`, …) so "加个价格表 / add an FAQ" routes
+precisely; they all delegate here. Regenerate after adding a block type:
+`python3 skills/generate-block-skills.py`.
+
+## 4. Rules
+- **Discover before you write.** Use real `type` / `variant` values from `/blocks` and real ids from the target's list. Unknown type/variant/id or a bad `position` returns a clear `error.message` — read it and retry.
+- **Objects merge, arrays replace.** For list edits: read → modify the array → send it back.
+- Edits are **instant** — live site updates on next load, no redeploy.
+- Available block types: `hero` · `stats` · `logos` · `features` · `problem` · `comparison` · `testimonials` · `pricing` · `faq` · `cta` · `steps` (numbered how-it-works) · `gallery` (image grid) · `team` (member cards) · `banner` (highlight strip) · `section` (the flexible token-driven block — see `../homestead-site-capture/SKILL.md`). Image-bearing blocks (`gallery`, `team`, `testimonials` avatars, `section` media) take a `/api/media/<file>` URL — **upload the photo first** via `../homestead-site-media/SKILL.md`. The catalog is the source of truth; new types appear there as they're added.
+- A **brand-new block type** (not an instance of an existing one) is a code change — add it to `backend/app/services/block_service.py` (manifest) **and** a renderer in `frontend/components/sections.tsx`, then redeploy. After that it shows up in `/blocks` automatically.

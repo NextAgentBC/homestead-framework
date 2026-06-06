@@ -3,15 +3,15 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-oracle_site}
-      POSTGRES_USER: ${POSTGRES_USER:-oracle_site}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oracle_site_password}
+      POSTGRES_DB: ${POSTGRES_DB:-homestead_site}
+      POSTGRES_USER: ${POSTGRES_USER:-homestead_site}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-homestead_site_password}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-55433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-oracle_site} -d ${POSTGRES_DB:-oracle_site}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-homestead_site} -d ${POSTGRES_DB:-homestead_site}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -21,7 +21,7 @@ services:
     build: ./backend
     env_file: ./backend/.env
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-oracle_site}:${POSTGRES_PASSWORD:-oracle_site_password}@postgres:5432/${POSTGRES_DB:-oracle_site}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-homestead_site}:${POSTGRES_PASSWORD:-homestead_site_password}@postgres:5432/${POSTGRES_DB:-homestead_site}
     # Reach the host webchat-bridge (systemd --user service on :18791) for live chat.
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -31,10 +31,10 @@ services:
       - media-data:/app/media      # self-hosted blog images, served at /api/media/<file>
     networks:
       default: {}
-      # Cloudflare tunnel (in infra/) routes oracle-api.* -> this alias on `edge`.
+      # Cloudflare tunnel (in infra/) routes homestead-api.* -> this alias on `edge`.
       edge:
         aliases:
-          - oracle-site-backend
+          - homestead-site-backend
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,10 +51,10 @@ services:
       - "3000:3000"
     networks:
       default: {}
-      # Cloudflare tunnel (in infra/) routes oracle.* -> this alias on `edge`.
+      # Cloudflare tunnel (in infra/) routes homestead.* -> this alias on `edge`.
       edge:
         aliases:
-          - oracle-site-frontend
+          - homestead-site-frontend
     depends_on:
       - backend
 

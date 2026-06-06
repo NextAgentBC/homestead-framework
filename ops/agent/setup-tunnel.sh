@@ -22,8 +22,8 @@ set -euo pipefail
 : "${API_DOMAIN:?set API_DOMAIN (e.g. homestead-api.example.com)}"
 TUNNEL_NAME="${TUNNEL_NAME:-homestead}"
 EDGE_NET="${EDGE_NET:-edge}"
-FRONTEND_SVC="${FRONTEND_SVC:-http://oracle-site-frontend:3000}"
-BACKEND_SVC="${BACKEND_SVC:-http://oracle-site-backend:8000}"
+FRONTEND_SVC="${FRONTEND_SVC:-http://homestead-site-frontend:3000}"
+BACKEND_SVC="${BACKEND_SVC:-http://homestead-site-backend:8000}"
 API=https://api.cloudflare.com/client/v4
 
 command -v jq >/dev/null || { echo "need 'jq' (apt-get install -y jq)"; exit 1; }

@@ -1,7 +1,7 @@
 # Webchat bridge
 
 Host-side glue connecting the (containerized) website backend to the OpenClaw gateway,
-so the website's chat widget is answered by 小爪 — safely.
+so the website's chat widget is answered by the assistant — safely.
 
 ```
 visitor → widget → backend /api/chat (container)

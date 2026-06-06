@@ -58,7 +58,7 @@ def mirror_telegram(session: str, message: str, reply: str) -> None:
         return
     note = (f"🌐 网站访客\n"
             f"👤 {message[:600]}\n\n"
-            f"🤖 小爪：{reply[:1200]}\n\n"
+            f"🤖 Assistant：{reply[:1200]}\n\n"
             f"↩️ 接管回复用 session：{session}")
     subprocess.run(
         [OPENCLAW, "message", "send", "--channel", "telegram", "--target", TG_TARGET, "--message", note],

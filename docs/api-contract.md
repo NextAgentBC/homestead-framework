@@ -21,7 +21,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `POST` | `/api/auth/google` | Verify Google ID token, create/login user |
 | `POST` | `/api/newsletter/subscribe` | Subscribe an email |
 | `POST` | `/api/contact` | Send a contact message (also pings the operator on Telegram) |
-| `POST` | `/api/chat` | Live chat — visitor message (`{sessionId?, message, locale?}`) answered by the sandboxed 小爪 brain; returns `{sessionId, reply}` (rate-limited) |
+| `POST` | `/api/chat` | Live chat — visitor message (`{sessionId?, message, locale?}`) answered by the sandboxed assistant brain; returns `{sessionId, reply}` (rate-limited) |
 | `GET` | `/api/chat/:sessionId` | Live chat — full transcript for a session |
 
 ## Admin Endpoints
@@ -55,7 +55,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 
 ## Page composition (blocks)
 
-A page (and the home page) is an ordered list of **blocks** — `{ id, type, variant, content }`. `GET /api/blocks` is the source of truth for the 15 types and their fields; edit a surface's block list through `/api/admin/compose/:target/*` (`target` = `home` or a page slug). Theme (colors/fonts) is separate — it lives in the design profile tokens, so structure and skin stay decoupled. Edits are instant (no redeploy). Full guide: `REFERENCE.zh.md` + the `oracle-site-compose` / `oracle-site-capture` skills.
+A page (and the home page) is an ordered list of **blocks** — `{ id, type, variant, content }`. `GET /api/blocks` is the source of truth for the 15 types and their fields; edit a surface's block list through `/api/admin/compose/:target/*` (`target` = `home` or a page slug). Theme (colors/fonts) is separate — it lives in the design profile tokens, so structure and skin stay decoupled. Edits are instant (no redeploy). Full guide: `REFERENCE.zh.md` + the `homestead-site-compose` / `homestead-site-capture` skills.
 
 ## Design Profile
 

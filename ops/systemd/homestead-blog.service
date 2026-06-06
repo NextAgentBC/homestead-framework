@@ -1,0 +1,9 @@
+[Unit]
+Description=Generate daily Homestead blog
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/homestead-site/backend
+EnvironmentFile=/opt/homestead-site/backend/.env
+ExecStart=/opt/homestead-site/backend/.venv/bin/flask --app app.main blog generate-daily
+
