@@ -1529,3 +1529,27 @@ def demo_industries() -> list:
     """[{key, name}] for the industries a visitor can preview — each maps to a complete
     template (see STYLE_PRESETS)."""
     return [{"key": k, "name": STYLE_PRESETS[k].get("name", k)} for k in DEMO_INDUSTRIES if k in STYLE_PRESETS]
+
+
+# Demo/showcase industry templates render in a wider, more spacious container by
+# default (matches the polished look of a real, dialed-in site). A rebrand still
+# preserves whatever contentMaxWidth a live site already uses, so this only sets
+# the starting width for fresh deploys / previews.
+for _ind_key in DEMO_INDUSTRIES:
+    if _ind_key in STYLE_PRESETS:
+        STYLE_PRESETS[_ind_key].setdefault("tokens", {}).setdefault("layout", {})["contentMaxWidth"] = "1440px"
+
+# Demo/showcase templates ship with real sample photos on the hero + CTA (the most
+# visible slots) so a fresh deploy / preview looks like a finished site, not a
+# placeholder shell. Gallery slots stay prompt-placeholders — the same pattern a
+# real, in-progress site has. Photos are bundled in the frontend at
+# /demo/<industry>-{hero,cta}.jpg (see frontend/public/demo/).
+for _ind_key in DEMO_INDUSTRIES:
+    _preset = STYLE_PRESETS.get(_ind_key)
+    if not _preset:
+        continue
+    for _sec in _preset.get("sections") or []:
+        if _sec.get("type") == "hero":
+            _sec.setdefault("content", {})["image"] = f"/demo/{_ind_key}-hero.jpg"
+        elif _sec.get("type") == "cta":
+            _sec.setdefault("content", {})["image"] = f"/demo/{_ind_key}-cta.jpg"
