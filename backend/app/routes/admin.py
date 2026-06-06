@@ -1119,8 +1119,9 @@ def _chat_or_404(session_id: str):
 @require_auth(admin=True)
 def chat_list():
     """List website chat conversations (newest activity first).
-    ?status=open|closed · ?awaiting=1 → only threads whose last message is from the
-    visitor (waiting for a human/operator reply) — the take-over inbox to poll."""
+    ?status=open|closed · ?awaiting=1 → only threads no human operator has answered
+    yet (last message is the visitor's, or only the AI / auto-fallback replied) — the
+    take-over inbox to poll. Works whether or not the AI bridge is configured."""
     status = (request.args.get("status") or "").strip()
     awaiting = (request.args.get("awaiting") or "").strip().lower() in ("1", "true", "yes", "visitor")
     limit = max(1, min(int(request.args.get("limit", "100")), 500))
@@ -1137,9 +1138,11 @@ def chat_list():
     )
     cards = [c.to_card_dict() for c in convos]
     if awaiting:
-        # "awaiting a human" = the most recent message is the visitor's (the AI/operator
-        # hasn't answered it yet). Computed from the card so it's one source of truth.
-        cards = [c for c in cards if c.get("lastRole") == "visitor"][:limit]
+        # "awaiting a human" = a human operator has NOT given the latest reply. The last
+        # message is the visitor's, or only the AI / auto-fallback "assistant" answered —
+        # both mean the thread still needs a person. (With the bridge off, every visitor
+        # message gets an auto-fallback, so "last == visitor" alone would miss them.)
+        cards = [c for c in cards if c.get("lastRole") in ("visitor", "agent")][:limit]
     return {"items": cards, "meta": {"count": len(cards), "awaiting": awaiting}}
 
 

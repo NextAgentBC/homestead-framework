@@ -1,6 +1,7 @@
 """Human/OpenClaw take-over of website live chat: the `awaiting=1` inbox surfaces
-threads whose last message is the visitor's (waiting for a reply), and an operator
-reply injects into the thread and clears it from the inbox — no Telegram required."""
+threads no human has answered yet (the visitor's message, or one only the AI/auto-
+fallback replied to), and an operator reply injects into the thread and clears it
+from the inbox — no Telegram required."""
 from app.extensions import db
 from app.models import ChatConversation, ChatMessage
 
@@ -15,12 +16,14 @@ def _convo(session_id, *roles):
     return c
 
 
-def test_awaiting_inbox_lists_only_unanswered(client, auth, app):
-    _convo("web_waiting", "visitor")                 # last = visitor → waiting on a human
-    _convo("web_answered", "visitor", "operator")    # last = operator → already handled
+def test_awaiting_inbox_lists_threads_needing_a_human(client, auth, app):
+    _convo("web_waiting", "visitor")                 # visitor's message is last → needs a human
+    _convo("web_aifallback", "visitor", "agent")     # only the AI/auto-fallback replied → still needs a human
+    _convo("web_answered", "visitor", "operator")    # a human operator replied → handled
     body = client.get("/api/admin/chat?status=open&awaiting=1", headers=auth).get_json()
     sids = {c["sessionId"] for c in body["items"]}
     assert "web_waiting" in sids
+    assert "web_aifallback" in sids
     assert "web_answered" not in sids
     assert body["meta"]["awaiting"] is True
 

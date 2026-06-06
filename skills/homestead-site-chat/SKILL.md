@@ -23,15 +23,16 @@ lands in the visitor's widget within ~5 seconds (it polls) and becomes context f
 Find threads waiting for a human two ways:
 
 - **Poll the inbox** (works with no Telegram): `GET /admin/chat?status=open&awaiting=1`
-  returns only conversations whose last message is the **visitor's** — i.e. waiting on you.
-  This is the reliable way for an OpenClaw/agent loop to pick up and answer.
+  returns only threads **no human operator has answered yet** — the visitor's message, or one
+  the AI / auto-fallback replied to (with the bridge off, that's every visitor message). This is
+  the reliable way for an OpenClaw/agent loop to pick up and reply.
 - **Telegram** (optional): if you set `WEBCHAT_TG_TARGET`, each exchange is mirrored there
   and ends with `↩️ 接管回复用 session：web_xxxx` — that `session` is the id to reply to.
 
 ## Review (admin token)
 
 ```bash
-# 📥 Take-over inbox — only threads waiting for a human (last message is the visitor's):
+# 📥 Take-over inbox — threads no human has answered yet (visitor's, or only AI/fallback replied):
 curl -s "$HOMESTEAD_SITE_API/admin/chat?status=open&awaiting=1" -H "Authorization: Bearer $HOMESTEAD_SITE_TOKEN"
 
 # All open conversations, newest activity first (cards: sessionId, last message, email…)
