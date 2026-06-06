@@ -91,12 +91,15 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     design = d;
     navPages = pages.filter((page) => page.showInNav).map((page) => ({ slug: page.slug, navLabel: page.navLabel }));
   }
-  // During preview, the footer tagline is a generic demo line (the real site's custom
-  // tagline wouldn't fit the previewed industry).
-  if (previewIndustry) {
+  // On the demo/showcase, the chat greeting + footer tagline are demo-appropriate and
+  // follow the current (previewed) brand — not the real site's leftover custom strings.
+  if (site.demoPreview) {
     messages["footer.tagline"] = locale === "zh"
-      ? "Homestead 多行业模板 · 实时预览演示"
-      : "Homestead multi-industry template · live preview";
+      ? "Homestead 多行业建站演示 · 实时预览"
+      : "Homestead multi-industry demo · live preview";
+    messages["chat.greeting"] = locale === "zh"
+      ? "你好！我是「{assistant}」的 AI 助手 😊 这同时是一个 Homestead 多行业建站演示——点下面任意行业，就能把整站实时预览成那个行业。关于建站或某个行业都可以问我～"
+      : "Hi! I'm {assistant}'s assistant 😊 This is also a Homestead multi-industry demo — tap any industry below to preview the whole site as that business. Ask me anything!";
   }
   const localeList = site.locales?.length ? site.locales : LOCALES;
   return (
@@ -145,7 +148,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <ChatWidget
               locale={locale}
               messages={messages}
-              assistantName={site.assistantName}
+              assistantName={brand}
               demoPreview={!!site.demoPreview}
               industries={industries}
               previewing={!!previewIndustry}
