@@ -21,6 +21,7 @@
 | GET | `/health` | 健康检查 |
 | GET | `/site` | 站点配置（名称、语言等） |
 | GET | `/design` `?locale=` | 当前生效的设计档（tokens + sections） |
+| GET | `/industries` · `/design/preview` `?industry=&locale=` | 行业演示：可选行业列表 + 某行业整页设计预览（**只读、不落库**，`SITE_DEMO_PREVIEW=true` 时供访客试） |
 | GET | `/blocks` | 积木目录（类型 / 变体 / 字段 / 默认值 / 图标库）|
 | GET | `/patterns` · `/patterns/{slug}` | 已存板块模式库（截图捕获沉淀） |
 | GET | `/i18n/{locale}` | 界面文案（导航 / 页脚 / 按钮） |
@@ -32,6 +33,7 @@
 |---|---|---|
 | GET | `/blogs` `?locale=` · `/blogs/{slug}` | 已发布博客 |
 | GET | `/pages` `?locale=` · `/pages/{slug}` | 已发布内容页 |
+| GET | `/pages/preview` · `/pages/preview/{slug}` `?industry=&locale=` | 行业演示：该行业导航页 + 子页内容（中/英，来自 `demo_packs.json`，**不落库**） |
 
 **互动**
 | 方法 | 路径 | 说明 |
@@ -55,6 +57,8 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/admin/site/rebrand` | **一键换行业**：重生成首页设计+版块、清掉各语言残留的旧版块（防止"中文页卡在旧站"）、每面快照（一次 `undo` 全量回滚）、返回 `imagery`（模板声明的配图提示词+落点）与一致性审计。`{industry\|preset, competitorUrls?, brandName?, dryRun?}`。是 rebrand 不是微调——会重生成首页、重置本地化文案 |
+| GET / PATCH | `/admin/site/settings` | 运行时站点身份（品牌/行业/受众/客服名）；改完整站即时生效、无需重建 |
+| GET | `/admin/chat` `?status=&awaiting=1` | 在线客服会话列表；`awaiting=1` = 还没人工回复过的（人工接管收件箱），配 `/admin/chat/{s}/reply`·`/close` 接管 |
 | GET | `/admin/consistency` | **一致性审计 = "做完"的机器判定**：逐 面×语言 报 `structural_drift`（结构漂移）/ `missing_translation`（缺/未译）/ `language_mismatch`（中英错位）/ `industry_residue`（旧行业残留）→ `{ok, findings[], summary}`。换行业/翻译后循环修到 `ok:true` 才算完 |
 
 **内容 content**

@@ -175,6 +175,7 @@ SITE_AUDIENCE=
 SITE_REGION=
 SITE_ASSISTANT_NAME=        # live-chat helper name; blank = follows SITE_NAME
 SITE_SEED_DEMO=true         # on an empty DB, seed a full demo site (idempotent)
+SITE_DEMO_PREVIEW=false     # showcase only: let visitors preview the site as any industry
 GOOGLE_CLIENT_ID=
 ADMIN_EMAILS=
 DEEPSEEK_API_KEY=
@@ -202,6 +203,15 @@ in the app, or tell your agent "换成医美 / turn this into a restaurant / 律
 brand name, theme, home, the About/Services pages, blog lede, SEO and the chat
 assistant — in one call, with no redeploy.
 
+**Showcase: visitor industry preview.** Set `SITE_DEMO_PREVIEW=true` and anonymous visitors
+can preview the **whole site** as any of the 11 industries straight from the chat widget —
+home, nav pages, sub-pages, brand, footer, all localized to the visitor's language. It's a
+per-visitor, cookie-scoped preview that **never writes to the DB** (the real site is
+untouched; refresh or "back to the real site" resets). Pre-built, translated demo packs
+([`backend/app/data/demo_packs.json`](backend/app/data/demo_packs.json)) + bundled sample
+photos ([`frontend/public/demo/`](frontend/public/demo/)) power it — no LLM at runtime. Off
+by default: a real business site shouldn't offer customers "try another industry."
+
 ## API Contract
 
 Machine-readable source of truth: `GET /api/openapi.json`. A categorized human map
@@ -215,17 +225,19 @@ Public (no token):
 - `GET /api/i18n/:locale` — UI chrome strings · `GET /api/media/:filename` — self-hosted images
 - `GET /api/blogs` (`?locale=`) · `GET /api/blogs/:slug`
 - `GET /api/pages` (`?locale=`) · `GET /api/pages/:slug`
+- `GET /api/industries` · `GET /api/design/preview` · `GET /api/pages/preview` · `GET /api/pages/preview/:slug` (`?industry=&locale=`) — visitor industry-preview demo (read-only, non-destructive)
 - `POST /api/auth/google` · `POST /api/newsletter/subscribe` · `POST /api/contact`
 
 Admin (`Authorization: Bearer <jwt>`):
 
 - **Design** — `GET|PATCH /api/admin/design` · `POST /api/admin/design/generate` · `POST /api/admin/design/analyze-competitors`
-- **Site** — `POST /api/admin/site/rebrand` (atomic industry switch → returns `imagery` + audit) · `GET /api/admin/consistency` (coherence audit `{ok, findings[]}`)
+- **Site** — `POST /api/admin/site/rebrand` (atomic industry switch → identity + pages + `imagery` + audit) · `GET|PATCH /api/admin/site/settings` (runtime brand/industry/audience/assistant, no redeploy) · `GET /api/admin/consistency` (coherence audit `{ok, findings[]}`)
 - **Blogs** — `POST /api/admin/blogs` · `PATCH /api/admin/blogs/:id` · `POST /api/admin/blogs/generate`
 - **Pages** — `POST /api/admin/pages` · `PATCH|DELETE /api/admin/pages/:id`
 - **Compose** (block-level page editing) — `GET /api/admin/surfaces` · `GET|POST /api/admin/compose/:target/blocks` · `PATCH|DELETE …/blocks/:id` · `POST …/blocks/:id/move` · `…/duplicate` · `POST /api/admin/compose/:target/batch`
 - **Patterns** — `POST /api/admin/patterns` · `DELETE /api/admin/patterns/:id`
 - **i18n** — `PATCH /api/admin/i18n/:locale`
+- **Live chat** — `GET /api/admin/chat` (`?status=` · `?awaiting=1` take-over inbox) · `GET /api/admin/chat/:session` · `POST …/reply` · `POST …/close`
 - **Media** (upload-only) — `GET|POST /api/admin/media` · `DELETE /api/admin/media/:filename`
 
 Get a non-interactive admin token (runs where the backend runs):
