@@ -1517,3 +1517,15 @@ def apply_style(name: str) -> dict:
     profile["tokens"] = deep_merge(DEFAULT_DESIGN_PROFILE["tokens"], preset.get("tokens") or {})
     profile["sections"] = preset.get("sections") or DEFAULT_SECTIONS
     return profile
+
+
+# Industries offered in the visitor "try an industry" preview demo, in display order
+# (the owner's key verticals first). Each maps to a full, image-ready template.
+DEMO_INDUSTRIES = ["beauty", "education", "restaurant", "healthcare", "fitness",
+                   "legal", "realestate", "creative", "tech", "finance", "nonprofit"]
+
+
+def demo_industries() -> list:
+    """[{key, name}] for the industries a visitor can preview — each maps to a complete
+    template (see STYLE_PRESETS)."""
+    return [{"key": k, "name": STYLE_PRESETS[k].get("name", k)} for k in DEMO_INDUSTRIES if k in STYLE_PRESETS]

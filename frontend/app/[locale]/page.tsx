@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { SectionRenderer } from "@/components/sections";
-import { getDesign, getPosts, getSite } from "@/lib/api";
+import { cookies } from "next/headers";
+import { getDesign, getPosts, getSite, getDesignPreview, PREVIEW_COOKIE } from "@/lib/api";
 import { alternatesFor, loadMessages, normalizeLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -14,9 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = normalizeLocale(raw);
-  const [site, design, posts, messages] = await Promise.all([
-    getSite(),
-    getDesign(locale),
+  const site = await getSite();
+  const previewIndustry = site.demoPreview ? ((await cookies()).get(PREVIEW_COOKIE)?.value || "") : "";
+  const [design, posts, messages] = await Promise.all([
+    previewIndustry ? getDesignPreview(previewIndustry, locale) : getDesign(locale),
     getPosts(locale),
     loadMessages(locale)
   ]);

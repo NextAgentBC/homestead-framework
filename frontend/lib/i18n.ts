@@ -81,7 +81,12 @@ const EN: Messages = {
   "chat.send": "Send",
   "chat.typing": "Assistant is typing",
   "chat.error": "Sorry, something went wrong. Please try again, or leave your email and we'll reach out.",
-  "chat.rateLimited": "You're sending messages a bit fast — give it a moment 🙂"
+  "chat.rateLimited": "You're sending messages a bit fast — give it a moment 🙂",
+  "chat.tryIndustries": "Want to see this site as another industry? Tap one to preview live:",
+  "preview.label": "Industry preview: {label}",
+  "preview.note": "Live demo — your real site isn't changed. ",
+  "preview.reset": "Back to the real site",
+  "preview.switched": "Previewing the {label} template 👇 Tap “Back to the real site” at the top to return."
 };
 
 const ZH: Messages = {
@@ -135,7 +140,12 @@ const ZH: Messages = {
   "chat.send": "发送",
   "chat.typing": "对方正在输入",
   "chat.error": "抱歉，出了点问题。请重试，或留下邮箱我们联系你。",
-  "chat.rateLimited": "你发得有点快啦，稍等一下 🙂"
+  "chat.rateLimited": "你发得有点快啦，稍等一下 🙂",
+  "chat.tryIndustries": "想看看这个网站做成别的行业长啥样？点一个即可实时预览：",
+  "preview.label": "行业预览：{label}",
+  "preview.note": "实时演示 —— 不会改动你的真实网站。",
+  "preview.reset": "恢复原站",
+  "preview.switched": "正在预览「{label}」模板 👇 点顶部「恢复原站」即可回来。"
 };
 
 const BUILTIN: Record<string, Messages> = { en: EN, zh: ZH };

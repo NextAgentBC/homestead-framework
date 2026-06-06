@@ -23,7 +23,7 @@ from ..models import (
     Page,
     UiMessages,
 )
-from ..services.design_service import DEFAULT_DESIGN_PROFILE, normalized_profile
+from ..services.design_service import DEFAULT_DESIGN_PROFILE, normalized_profile, profile_for_industry, demo_industries
 from ..services import block_service, chat_service, site_service
 from ..services.email_service import send_email
 
@@ -75,6 +75,7 @@ def site():
             "googleClientId": cfg["GOOGLE_CLIENT_ID"],
             "locales": cfg["SITE_LOCALES"],
             "defaultLocale": cfg["SITE_DEFAULT_LOCALE"],
+            "demoPreview": cfg["SITE_DEMO_PREVIEW"],
         }
     }
 
@@ -86,6 +87,22 @@ def design():
     if not profile:
         return {"item": DEFAULT_DESIGN_PROFILE}
     return {"item": normalized_profile(profile.to_dict(locale), profile.industry or current_app.config["SITE_INDUSTRY"])}
+
+
+@bp.get("/industries")
+def industries():
+    """Industry templates available for the visitor preview demo (key + display name)."""
+    return {"items": demo_industries()}
+
+
+@bp.get("/design/preview")
+def design_preview():
+    """Non-destructive preview: return the full design profile for a given industry
+    template WITHOUT persisting anything — the real active design is untouched. Powers
+    the visitor 'try an industry' demo (cookie-scoped on the frontend)."""
+    industry = (request.args.get("industry") or "").strip().lower()
+    prof = profile_for_industry(industry)
+    return {"item": normalized_profile(prof, prof.get("industry") or industry)}
 
 
 @bp.get("/i18n/<locale>")

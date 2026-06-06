@@ -42,6 +42,12 @@ class Config:
     # design/page already exists, so an owner's existing data is never touched.
     SITE_SEED_DEMO = os.getenv("SITE_SEED_DEMO", "true").lower() == "true"
 
+    # Industry-preview demo: lets anonymous visitors preview the site rendered as
+    # any industry template (a per-visitor, cookie-scoped preview that NEVER writes
+    # to the DB — the real site is untouched). Off by default; turn on for a public
+    # showcase so visitors can "try" every industry from the chat widget.
+    SITE_DEMO_PREVIEW = os.getenv("SITE_DEMO_PREVIEW", "false").lower() == "true"
+
     # i18n — first locale is the default (base columns). Add "zh" for Chinese.
     SITE_LOCALES = _csv(os.getenv("SITE_LOCALES", "en,zh")) or ["en"]
     SITE_DEFAULT_LOCALE = os.getenv("SITE_DEFAULT_LOCALE", "") or SITE_LOCALES[0]

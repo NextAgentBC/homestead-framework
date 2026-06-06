@@ -8,7 +8,15 @@ export type Site = {
   googleClientId: string;
   locales: string[];
   defaultLocale: string;
+  demoPreview?: boolean;
 };
+
+// Cookie that scopes a visitor's industry preview (client-set, server-read). When
+// set and demoPreview is on, the home + theme render that industry's template —
+// a per-visitor preview that never writes to the DB.
+export const PREVIEW_COOKIE = "homestead_preview";
+
+export type Industry = { key: string; name: string };
 
 export type BlogPost = {
   id: number;
@@ -238,8 +246,33 @@ export async function getSite(): Promise<Site> {
       assistantName: "Homestead",
       googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
       locales: (process.env.NEXT_PUBLIC_SITE_LOCALES || "en,zh").split(",").map((s) => s.trim()).filter(Boolean),
-      defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en"
+      defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en",
+      demoPreview: false
     };
+  }
+}
+
+// Industries a visitor can preview (demo). Empty on failure → the chat just won't show chips.
+export async function getIndustries(): Promise<Industry[]> {
+  try {
+    const data = await fetchJson<{ items: Industry[] }>("/industries", { cache: "no-store" });
+    return data.items || [];
+  } catch {
+    return [];
+  }
+}
+
+// Non-destructive preview of the site as a given industry template (never persisted).
+export async function getDesignPreview(industry: string, locale?: string): Promise<DesignProfile> {
+  try {
+    const sep = localeQuery(locale) ? "&" : "?";
+    const data = await fetchJson<{ item: DesignProfile }>(
+      `/design/preview${localeQuery(locale)}${sep}industry=${encodeURIComponent(industry)}`,
+      { cache: "no-store" }
+    );
+    return data.item;
+  } catch {
+    return fallbackDesign;
   }
 }
 

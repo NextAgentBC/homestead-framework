@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Inter, Space_Grotesk, Spectral, Fraunces, Oswald } from "next/font/google";
 import "../globals.css";
 import { AuthProvider } from "../providers";
-import { getDesign, getSite, getPages } from "@/lib/api";
+import { cookies } from "next/headers";
+import { getDesign, getSite, getPages, getDesignPreview, getIndustries, PREVIEW_COOKIE } from "@/lib/api";
 import { designCssVariables } from "@/lib/design";
 import { SiteNav } from "@/components/nav";
 import { ChatWidget } from "@/components/chat-widget";
+import { PreviewBanner } from "@/components/preview-banner";
 import { loadMessages, normalizeLocale, LOCALES, t } from "@/lib/i18n";
 import type { DesignProfile } from "@/lib/api";
 
@@ -61,7 +63,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = normalizeLocale(raw);
-  const [site, design, pages, messages] = await Promise.all([getSite(), getDesign(), getPages(locale), loadMessages(locale)]);
+  const site = await getSite();
+  // Per-visitor industry preview (cookie-scoped, never persisted). When set and the
+  // demo is enabled, render that industry's template instead of the real design.
+  const previewIndustry = site.demoPreview ? ((await cookies()).get(PREVIEW_COOKIE)?.value || "") : "";
+  const [design, pages, messages, industries] = await Promise.all([
+    previewIndustry ? getDesignPreview(previewIndustry, locale) : getDesign(locale),
+    getPages(locale),
+    loadMessages(locale),
+    site.demoPreview ? getIndustries() : Promise.resolve([])
+  ]);
   const navPages = pages.filter((page) => page.showInNav).map((page) => ({ slug: page.slug, navLabel: page.navLabel }));
   const localeList = site.locales?.length ? site.locales : LOCALES;
   return (
@@ -79,6 +90,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <body>
         <AuthProvider>
           <div className="shell">
+            {previewIndustry && <PreviewBanner label={design.name} messages={messages} />}
             <SiteNav siteName={site.name} pages={navPages} locale={locale} locales={localeList} messages={messages} />
             {children}
             <footer className="footer">
@@ -106,7 +118,14 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               </div>
               <div className="footer-bottom">© {new Date().getFullYear()} {site.name}</div>
             </footer>
-            <ChatWidget locale={locale} messages={messages} assistantName={site.assistantName} />
+            <ChatWidget
+              locale={locale}
+              messages={messages}
+              assistantName={site.assistantName}
+              demoPreview={!!site.demoPreview}
+              industries={industries}
+              previewing={!!previewIndustry}
+            />
           </div>
         </AuthProvider>
       </body>
