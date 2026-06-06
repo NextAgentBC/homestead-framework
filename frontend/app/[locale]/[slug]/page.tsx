@@ -14,7 +14,9 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, locale: raw } = await params;
   const locale = normalizeLocale(raw);
-  const page = await getPage(slug, locale);
+  const site = await getSite();
+  const previewIndustry = site.demoPreview ? ((await cookies()).get(PREVIEW_COOKIE)?.value || "") : "";
+  const page = previewIndustry ? await getPreviewPage(slug, previewIndustry, locale) : await getPage(slug, locale);
   if (!page) return {};
   return {
     title: page.metaTitle || page.title,

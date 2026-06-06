@@ -50,13 +50,19 @@ function deriveThemeFamily(design: DesignProfile): string {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const site = await getSite();
-  const tagline = [site.industry, site.region].filter(Boolean).join(" · ");
-  const description = tagline ? `${site.name} — ${tagline}.` : site.name;
+  let name = site.name, industry = site.industry;
+  const previewIndustry = site.demoPreview ? ((await cookies()).get(PREVIEW_COOKIE)?.value || "") : "";
+  if (previewIndustry) {
+    const pv = await getPreview(previewIndustry, locale);
+    name = pv.site.name || name; industry = pv.site.industry || industry;
+  }
+  const tagline = [industry, site.region].filter(Boolean).join(" · ");
+  const description = tagline ? `${name} — ${tagline}.` : name;
   return {
-    title: { default: site.name, template: `%s | ${site.name}` },
+    title: { default: name, template: `%s | ${name}` },
     description,
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || site.url),
-    openGraph: { title: site.name, description, url: `${site.url}/${locale}`, siteName: site.name, type: "website" }
+    openGraph: { title: name, description, url: `${site.url}/${locale}`, siteName: name, type: "website" }
   };
 }
 
