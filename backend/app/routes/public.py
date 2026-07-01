@@ -76,6 +76,7 @@ def site():
             "locales": cfg["SITE_LOCALES"],
             "defaultLocale": cfg["SITE_DEFAULT_LOCALE"],
             "demoPreview": cfg["SITE_DEMO_PREVIEW"],
+            "nap": site_service.nap(),
         }
     }
 

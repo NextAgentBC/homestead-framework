@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPosts, getSite } from "@/lib/api";
+import { getPages, getPosts, getSite } from "@/lib/api";
 import { LOCALES } from "@/lib/i18n";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -15,6 +15,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({
         url: `${base}/${locale}/blog/${post.slug}`,
         lastModified: post.publishedAt || new Date().toISOString(),
+        changeFrequency: "monthly" as const,
+        priority: 0.7
+      });
+    }
+    // Content pages. GET /api/pages only returns status="published" rows (the
+    // backend filters in routes/public.py), so no draft URL can leak here.
+    const pages = await getPages(locale);
+    for (const page of pages) {
+      entries.push({
+        url: `${base}/${locale}/${page.slug}`,
+        lastModified: page.publishedAt || new Date().toISOString(),
         changeFrequency: "monthly" as const,
         priority: 0.7
       });

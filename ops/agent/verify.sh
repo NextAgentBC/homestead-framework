@@ -2,6 +2,7 @@
 # Verify a Homestead deploy: local origin health + PUBLIC reachability through the tunnel.
 # Exits non-zero if anything isn't reachable — so an agent can branch on it.
 # Required env: SITE_DOMAIN API_DOMAIN
+# Optional env: FRONTEND_PORT / BACKEND_PORT (published 127.0.0.1 ports, default 3000/8000)
 set -u
 : "${SITE_DOMAIN:?set SITE_DOMAIN}"; : "${API_DOMAIN:?set API_DOMAIN}"
 fail=0
@@ -11,8 +12,8 @@ check(){ # url  expected-codes(space-sep)
   else echo "  BAD  $code  $1  (want: $2)"; fail=1; fi
 }
 echo "[verify] local origin (published ports):"
-check "http://127.0.0.1:8000/api/health" "200"
-check "http://127.0.0.1:3000/"           "200 307 308"
+check "http://127.0.0.1:${BACKEND_PORT:-8000}/api/health"  "200"
+check "http://127.0.0.1:${FRONTEND_PORT:-3000}/"           "200 307 308"
 echo "[verify] public (through the Cloudflare tunnel):"
 check "https://$API_DOMAIN/api/health"   "200"
 check "https://$SITE_DOMAIN/"            "200 301 307 308"

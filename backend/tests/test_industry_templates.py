@@ -21,7 +21,8 @@ def test_every_industry_is_complete_and_image_ready():
 def test_industry_aliases_resolve_to_rich_templates():
     # A few common synonyms should land on the same complete template.
     for alias, expected in [("dentist", "healthcare"), ("gym", "fitness"),
-                            ("cafe", "restaurant"), ("salon", "beauty"), ("lawyer", "legal")]:
+                            ("cafe", "restaurant"), ("salon", "beauty"), ("lawyer", "legal"),
+                            ("plumber", "construction")]:
         prof = d.profile_for_industry(alias)
         types = [s.get("type") for s in (prof.get("sections") or [])]
         assert "gallery" in types, f"alias {alias!r} did not resolve to a rich template"

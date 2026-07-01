@@ -368,15 +368,34 @@ def get_site_settings():
 def update_site_settings():
     """Set any of brand name / industry / audience / region / assistant name at
     runtime — nav, footer, blog lede, SEO and the chat persona pick it up with no
-    redeploy. Send a blank string to fall a field back to its env default."""
+    redeploy. Send a blank string to fall a field back to its env default.
+
+    Also accepts the NAP fields (legalName … addressCountry as strings;
+    latitude/longitude as numbers or null; businessHours/serviceAreas as lists).
+    NAP has no env fallback — blank means "unset"; see site_service.nap()."""
     data = request.get_json(silent=True) or {}
     row = site_service.get_or_create_row()
     fields = {"siteName": "site_name", "industry": "industry", "audience": "audience",
-              "region": "region", "assistantName": "assistant_name"}
+              "region": "region", "assistantName": "assistant_name",
+              "legalName": "legal_name", "phone": "phone", "email": "email",
+              "addressStreet": "address_street", "addressCity": "address_city",
+              "addressRegion": "address_region", "addressPostalCode": "address_postal_code",
+              "addressCountry": "address_country"}
     changed = []
     for key, attr in fields.items():
         if key in data and isinstance(data[key], str):
             setattr(row, attr, data[key].strip())
+            changed.append(key)
+    # Non-string NAP fields get their own type checks; a wrongly-typed value is
+    # ignored rather than 400ing (same leniency as the string loop above).
+    for key, attr in (("latitude", "latitude"), ("longitude", "longitude")):
+        if key in data and (data[key] is None
+                            or (isinstance(data[key], (int, float)) and not isinstance(data[key], bool))):
+            setattr(row, attr, None if data[key] is None else float(data[key]))
+            changed.append(key)
+    for key, attr in (("businessHours", "business_hours"), ("serviceAreas", "service_areas")):
+        if key in data and isinstance(data[key], list):
+            setattr(row, attr, data[key])
             changed.append(key)
     db.session.commit()
     return {"item": {"stored": row.to_dict(), "effective": site_service.effective(), "changed": changed}}
@@ -840,6 +859,8 @@ def _create_page(data: dict, publish: bool) -> Page:
         show_in_nav=bool(data.get("show_in_nav", True)),
         meta_title=data.get("meta_title", data["title"][:60]),
         meta_description=data.get("meta_description", "")[:320],
+        local_business_overrides=(data["local_business_overrides"]
+                                  if isinstance(data.get("local_business_overrides"), dict) else {}),
         published_at=datetime.now(timezone.utc) if status == "published" else None,
     )
     page.canonical_url = f"{current_app.config['SITE_URL']}/{page.slug}"
@@ -885,6 +906,9 @@ def update_page(page_id: int):
         for key in ["title", "body_markdown", "sections", "status", "nav_label", "nav_order", "show_in_nav", "meta_title", "meta_description"]:
             if key in data:
                 setattr(page, key, data[key])
+        # Not localized (service cities don't translate), so base branch only.
+        if isinstance(data.get("local_business_overrides"), dict):
+            page.local_business_overrides = data["local_business_overrides"]
     if data.get("status") == "published" and not page.published_at:
         page.published_at = datetime.now(timezone.utc)
     db.session.commit()

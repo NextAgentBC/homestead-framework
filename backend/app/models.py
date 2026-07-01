@@ -99,6 +99,11 @@ class Page(TimestampMixin, db.Model):
     published_at = db.Column(db.DateTime, nullable=True)
     # {"<locale>": {"title":..,"nav_label":..,"body_markdown":..,"sections":[..],"meta_title":..,"meta_description":..}}
     i18n = db.Column(db.JSON, nullable=False, default=dict)
+    # Narrow per-page JSON-LD narrowing for city×service landing pages, e.g.
+    # {"service_areas": ["Surrey"], "service_type": "Pressure Washing"}. The full
+    # NAP stays on SiteSettings (never per page — split copies drift into the
+    # "inconsistent NAP" penalty); not localized, service cities don't translate.
+    local_business_overrides = db.Column(db.JSON, nullable=False, default=dict)
 
     def to_card_dict(self, locale=None) -> dict:
         title = _pick(self.i18n, locale, "title", self.title)
@@ -121,6 +126,7 @@ class Page(TimestampMixin, db.Model):
         item["canonicalUrl"] = self.canonical_url
         item["publishedAt"] = self.published_at.isoformat() if self.published_at else None
         item["sections"] = _pick(self.i18n, locale, "sections", self.sections)
+        item["localBusinessOverrides"] = self.local_business_overrides or {}
         return item
 
 
@@ -172,7 +178,13 @@ class SiteSettings(TimestampMixin, db.Model):
     nav + footer brand, blog lede, SEO, and the chat persona — with **no
     redeploy**. Any blank field falls back to the matching ``SITE_*`` env; see
     ``services.site_service.effective()``. The ``assistant_name`` falls back to
-    the brand name when blank (so the chat helper introduces itself as the site)."""
+    the brand name when blank (so the chat helper introduces itself as the site).
+
+    The NAP columns (``legal_name`` … ``service_areas``) are the business's
+    real-world identity — the single source of truth for JSON-LD, footer, and
+    contact info. Unlike the fields above they have **no** env fallback (a stale
+    default would create the "inconsistent NAP" signal local search penalizes);
+    see ``services.site_service.nap()``."""
     __tablename__ = "site_settings"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -181,6 +193,22 @@ class SiteSettings(TimestampMixin, db.Model):
     audience = db.Column(db.String(255), nullable=False, default="")
     region = db.Column(db.String(255), nullable=False, default="")
     assistant_name = db.Column(db.String(255), nullable=False, default="")
+    # NAP (name / address / phone) — split into columns so a PostalAddress can be
+    # assembled and consistency audited field-by-field.
+    legal_name = db.Column(db.String(255), nullable=False, default="")
+    phone = db.Column(db.String(255), nullable=False, default="")
+    email = db.Column(db.String(255), nullable=False, default="")
+    address_street = db.Column(db.String(255), nullable=False, default="")
+    address_city = db.Column(db.String(255), nullable=False, default="")
+    address_region = db.Column(db.String(255), nullable=False, default="")
+    address_postal_code = db.Column(db.String(255), nullable=False, default="")
+    address_country = db.Column(db.String(255), nullable=False, default="")
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    # [{"days": ["Mo",..], "opens": "09:00", "closes": "18:00"}] — maps 1:1 to
+    # schema.org OpeningHoursSpecification.
+    business_hours = db.Column(db.JSON, nullable=False, default=list)
+    service_areas = db.Column(db.JSON, nullable=False, default=list)  # ["Surrey", "Vancouver", ...]
 
     def to_dict(self) -> dict:
         return {
@@ -189,6 +217,18 @@ class SiteSettings(TimestampMixin, db.Model):
             "audience": self.audience,
             "region": self.region,
             "assistantName": self.assistant_name,
+            "legalName": self.legal_name,
+            "phone": self.phone,
+            "email": self.email,
+            "addressStreet": self.address_street,
+            "addressCity": self.address_city,
+            "addressRegion": self.address_region,
+            "addressPostalCode": self.address_postal_code,
+            "addressCountry": self.address_country,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "businessHours": self.business_hours or [],
+            "serviceAreas": self.service_areas or [],
         }
 
 

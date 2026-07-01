@@ -1,3 +1,20 @@
+// The business's NAP (name / address / phone) as served by GET /api/site.
+// Unset fields come back as "" / [] / null; consumers (JSON-LD, footer) omit them.
+export type Nap = {
+  legalName: string;
+  phone: string;
+  email: string;
+  street: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  hours: { day: string; opens: string; closes: string }[];
+  serviceAreas: string[];
+};
+
 export type Site = {
   name: string;
   url: string;
@@ -9,6 +26,7 @@ export type Site = {
   locales: string[];
   defaultLocale: string;
   demoPreview?: boolean;
+  nap: Nap;
 };
 
 // Cookie that scopes a visitor's industry preview (client-set, server-read). When
@@ -47,6 +65,9 @@ export type SitePage = {
   status?: string;
   publishedAt?: string | null;
   sections?: Section[];
+  // Page-level narrowing for local-SEO JSON-LD (city/service landing pages).
+  // Keys are snake_case because the backend stores the JSON column verbatim.
+  localBusinessOverrides?: { service_areas?: string[]; service_type?: string };
 };
 
 export type SectionCta = { label: string; href: string };
@@ -247,7 +268,22 @@ export async function getSite(): Promise<Site> {
       googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
       locales: (process.env.NEXT_PUBLIC_SITE_LOCALES || "en,zh").split(",").map((s) => s.trim()).filter(Boolean),
       defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en",
-      demoPreview: false
+      demoPreview: false,
+      // Empty NAP stub: consumers key off nap.legalName, so nothing renders.
+      nap: {
+        legalName: "",
+        phone: "",
+        email: "",
+        street: "",
+        city: "",
+        region: "",
+        postalCode: "",
+        country: "",
+        latitude: null,
+        longitude: null,
+        hours: [],
+        serviceAreas: []
+      }
     };
   }
 }

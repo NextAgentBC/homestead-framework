@@ -301,6 +301,23 @@ INDUSTRY_STYLE_ALIASES = {
     "legal": "legal", "law": "legal", "lawyer": "legal", "attorney": "legal", "advisory": "legal", "consulting": "legal",
     "creative": "creative", "agency": "creative", "studio": "creative", "design": "creative",
     "portfolio": "creative", "marketing": "creative", "photography": "creative",
+    # Trades & home services — one big family of "book a visit" businesses that all
+    # share the construction template (quote-first, trust-led, before/after proof).
+    "construction": "construction", "contractor": "construction", "renovation": "construction",
+    "remodeling": "construction", "general-contractor": "construction", "home-services": "construction",
+    "home services": "construction", "trades": "construction", "roofing": "construction",
+    "pressure-washing": "construction", "pressure washing": "construction",
+    "power-washing": "construction", "power washing": "construction",
+    "house-washing": "construction", "house washing": "construction",
+    "window-cleaning": "construction", "window cleaning": "construction",
+    "gutter-cleaning": "construction", "gutter cleaning": "construction",
+    "roof-cleaning": "construction", "roof cleaning": "construction", "moss removal": "construction",
+    "plumbing": "construction", "plumber": "construction", "electrician": "construction", "electrical": "construction",
+    "pest-control": "construction", "pest control": "construction", "exterminator": "construction",
+    "lawn-care": "construction", "lawn care": "construction", "landscaping": "construction", "hvac": "construction",
+    "junk-removal": "construction", "junk removal": "construction", "handyman": "construction",
+    "locksmith": "construction", "movers": "construction", "moving": "construction",
+    "carpet-cleaning": "construction", "carpet cleaning": "construction", "chimney-sweep": "construction",
 }
 
 
@@ -1036,6 +1053,24 @@ STYLE_PRESETS = {
             {"type": "cta", "variant": "banner", "content": {"headline": "Take the first step.", "subhead": "A free, no-pressure consultation.", "cta": {"label": "Book a call", "href": "/contact"}}},
         ],
     },
+    # Solid Ground — construction / trades / home services. Safety orange + slate
+    # blue, grotesk, compact and sturdy. Sections + imagery are auto-built from
+    # _RICH_INDUSTRY_SPECS["construction"] below (the complete image-ready home).
+    "construction": {
+        "name": "Solid Ground Trades",
+        "personality": "dependable, straightforward, hardworking, sturdy",
+        "tokens": {
+            "colors": {
+                "ink": "#1d1b16", "muted": "#6f685c", "paper": "#f6f4ef", "surface": "#ffffff",
+                "line": "#e4dccd", "primary": "#b5631e", "accent": "#2f4858", "highlight": "#e0a93c", "link": "#2f5f7a",
+                "surfaceInverse": "#16130e", "inkInverse": "#f6f2ea", "onPrimary": "#ffffff",
+            },
+            "typography": {"body": SANS, "heading": GROTESK},
+            "radius": {"card": "10px", "control": "8px", "pill": "999px"},
+            "layout": {"density": "compact", "heroMinHeight": "72vh", "sectionGap": "104px", "contentMaxWidth": "1160px", "cardPadding": "24px"},
+        },
+        "voice": {"headlineStyle": "direct, confident, benefit-led", "tone": "dependable, plainspoken, results-first"},
+    },
     # Pop — playful: purple + pink + yellow, very rounded, fun.
     "playful": {
         "name": "Pop — Playful",
@@ -1492,6 +1527,45 @@ _RICH_INDUSTRY_SPECS = {
                  "g3": "a clean printed financial report with glasses and a pen, professional detail",
                  "cta": "a confident handshake between advisor and happy client in a bright office, soft focus"},
         "imageStyle": "bright professional natural light, trustworthy emerald and navy tones, calm credible finance photography, photorealistic, no text, no watermark, no logo",
+    },
+    "construction": {
+        "prefix": "cx",
+        "hero": ["Free quotes, fast response", "Reliable service,", "done right the first time.",
+                 "Licensed, insured, and on time — request a free quote and see why homeowners trust us.",
+                 "Get a free quote", "/contact", "See our services", "/services"],
+        "stats": [("Licensed", "& insured"), ("Same-week", "availability"), ("100%", "satisfaction guarantee"), ("Local", "& trusted")],
+        "feat": ("Why homeowners choose us", "The essentials, done properly.", [
+            ("shield", "Insured & bonded", "Fully licensed, insured, and bonded — your home and our crew are covered."),
+            ("sparkles", "Warrantied results", "We stand behind every job with a written workmanship guarantee."),
+            ("gauge", "On-time every time", "Clear scheduling and crews that show up when we say they will.")]),
+        "gallery": ("Recent work", "A few before-and-afters.", ["Before & after", "Pro-grade equipment", "The finished result", "Ready to roll"]),
+        "steps": ("How it works", "From first call to finished job.", [
+            ("Consultation", "Tell us what you need — we'll assess it and answer honestly."),
+            ("Custom plan", "A clear written quote with scope and price, no surprises."),
+            ("Scheduling", "Pick a time that works; we confirm and stick to it."),
+            ("Service", "A tidy, professional crew does the job right."),
+            ("Quality check", "We walk the finished work with you and fix anything on the spot."),
+            ("Final touches", "We leave the site clean and follow up to make sure you're happy.")]),
+        "quotes": ("What homeowners say", [
+            ("On time, on budget, and the place looks brand new.", "Sandra K.", "Homeowner"),
+            ("They quoted fast, showed up when they said, and cleaned up after.", "Dave M.", "Homeowner"),
+            ("Professional from the first call to the final walkthrough.", "The Nguyens", "Homeowners")]),
+        "pricing": ("Get a free quote", "Every job is different — here's how pricing usually works.", [
+            ("Single service", "From $X", "/visit", ["One-off job", "Free written quote", "Satisfaction guaranteed"], False),
+            ("Multi-service package", "Custom", "", ["Bundle & save", "One visit, several jobs", "Priority scheduling"], True),
+            ("Annual maintenance", "Custom", "/yr", ["Seasonal upkeep plan", "We remind you, not the reverse", "Locked-in pricing"], False)]),
+        "faq": ("Common questions", [
+            ("What areas do you serve?", "We serve the local area and nearby communities — ask and we'll confirm your address."),
+            ("Are you licensed and insured?", "Yes — fully licensed, insured, and bonded, with proof available on request."),
+            ("How soon can you come out?", "Most quotes happen within a day or two, and most jobs are scheduled the same week.")]),
+        "cta": ("Ready to get started?", "Request a free, no-obligation quote today.", "Get a free quote"),
+        "imgs": {"hero": "a uniformed service technician working on a home exterior, confident and focused, well-kept suburban house, bright day",
+                 "g0": "a before-and-after comparison of a freshly cleaned and restored home exterior surface, dramatic difference, sharp detail",
+                 "g1": "close-up of professional-grade trade equipment and tools, clean and well-maintained, detail shot",
+                 "g2": "a freshly serviced home exterior looking spotless and renewed, blue sky, pride of work",
+                 "g3": "a clean branded work van parked outside a suburban home, ready for the job",
+                 "cta": "a technician shaking hands with a happy homeowner in front of their house, trust, soft focus"},
+        "imageStyle": "bright natural daylight, clean confident blue and orange accent tones, professional trades photography, photorealistic, no text, no watermark, no logo",
     },
 }
 
