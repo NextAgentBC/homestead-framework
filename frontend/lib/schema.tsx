@@ -5,6 +5,18 @@ import type { Nap, Site } from "./api";
 
 export type JsonLd = Record<string, unknown>;
 
+// openingHours compact-text day abbreviations (backend/admin contract), not
+// valid schema.org DayOfWeek enum values — must be mapped before emitting.
+const DAY_MAP: Record<string, string> = {
+  Mo: "Monday",
+  Tu: "Tuesday",
+  We: "Wednesday",
+  Th: "Thursday",
+  Fr: "Friday",
+  Sa: "Saturday",
+  Su: "Sunday"
+};
+
 // Drop empty values ("" / null / undefined / []) so unset NAP fields never
 // emit empty JSON-LD properties, which structured-data validators flag.
 function prune(obj: JsonLd): JsonLd {
@@ -56,7 +68,12 @@ export function localBusinessJsonLd(
         ? { "@type": "GeoCoordinates", latitude: nap.latitude, longitude: nap.longitude }
         : undefined,
     openingHoursSpecification: (nap.hours || []).map((h) =>
-      prune({ "@type": "OpeningHoursSpecification", dayOfWeek: h.day, opens: h.opens, closes: h.closes })
+      prune({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: (h.days || []).map((d) => DAY_MAP[d] || d),
+        opens: h.opens,
+        closes: h.closes
+      })
     ),
     areaServed: cityList(opts?.areaServedOverride ?? nap.serviceAreas),
     url: opts?.url || site.url
@@ -115,7 +132,10 @@ export function breadcrumbJsonLd(crumbs: { name: string; url: string }[]): JsonL
 export function renderJsonLdScripts(nodes: (JsonLd | null | undefined)[]): React.ReactElement[] {
   return nodes
     .filter((node): node is JsonLd => Boolean(node))
-    .map((node, i) => (
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }} key={i} />
-    ));
+    .map((node, i) => {
+      // Escape </script> breakout characters — Next.js requires this when
+      // injecting JSON via dangerouslySetInnerHTML (stored-XSS otherwise).
+      const json = JSON.stringify(node).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+      return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} key={i} />;
+    });
 }

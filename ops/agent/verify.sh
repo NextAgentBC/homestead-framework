@@ -3,6 +3,8 @@
 # Exits non-zero if anything isn't reachable — so an agent can branch on it.
 # Required env: SITE_DOMAIN API_DOMAIN
 # Optional env: FRONTEND_PORT / BACKEND_PORT (published 127.0.0.1 ports, default 3000/8000)
+#               SKIP_PUBLIC=1 skips the public/tunnel checks entirely (local checks still
+#               hard-fail) — used by deploy.sh --skip-tunnel as a pre-ingress gate.
 set -u
 : "${SITE_DOMAIN:?set SITE_DOMAIN}"; : "${API_DOMAIN:?set API_DOMAIN}"
 fail=0
@@ -14,9 +16,13 @@ check(){ # url  expected-codes(space-sep)
 echo "[verify] local origin (published ports):"
 check "http://127.0.0.1:${BACKEND_PORT:-8000}/api/health"  "200"
 check "http://127.0.0.1:${FRONTEND_PORT:-3000}/"           "200 307 308"
-echo "[verify] public (through the Cloudflare tunnel):"
-check "https://$API_DOMAIN/api/health"   "200"
-check "https://$SITE_DOMAIN/"            "200 301 307 308"
+if [ "${SKIP_PUBLIC:-0}" != 1 ]; then
+  echo "[verify] public (through the Cloudflare tunnel):"
+  check "https://$API_DOMAIN/api/health"   "200"
+  check "https://$SITE_DOMAIN/"            "200 301 307 308"
+else
+  echo "[verify] SKIP_PUBLIC=1 — skipping public/tunnel checks."
+fi
 if [ "$fail" = 0 ]; then echo "[verify] ✅ deploy looks healthy — site is live."; else
   echo "[verify] ❌ not fully reachable. If local is OK but public is 502/530:"
   echo "         1) DNS may still be propagating (wait ~1 min)."

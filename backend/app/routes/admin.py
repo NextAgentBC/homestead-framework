@@ -384,7 +384,7 @@ def update_site_settings():
     changed = []
     for key, attr in fields.items():
         if key in data and isinstance(data[key], str):
-            setattr(row, attr, data[key].strip())
+            setattr(row, attr, data[key].strip()[:255])
             changed.append(key)
     # Non-string NAP fields get their own type checks; a wrongly-typed value is
     # ignored rather than 400ing (same leniency as the string loop above).
@@ -393,10 +393,12 @@ def update_site_settings():
                             or (isinstance(data[key], (int, float)) and not isinstance(data[key], bool))):
             setattr(row, attr, None if data[key] is None else float(data[key]))
             changed.append(key)
-    for key, attr in (("businessHours", "business_hours"), ("serviceAreas", "service_areas")):
-        if key in data and isinstance(data[key], list):
-            setattr(row, attr, data[key])
-            changed.append(key)
+    if "businessHours" in data and isinstance(data["businessHours"], list):
+        row.business_hours = [h for h in data["businessHours"] if isinstance(h, dict)]
+        changed.append("businessHours")
+    if "serviceAreas" in data and isinstance(data["serviceAreas"], list):
+        row.service_areas = [a.strip() for a in data["serviceAreas"] if isinstance(a, str) and a.strip()]
+        changed.append("serviceAreas")
     db.session.commit()
     return {"item": {"stored": row.to_dict(), "effective": site_service.effective(), "changed": changed}}
 

@@ -116,6 +116,7 @@ class Page(TimestampMixin, db.Model):
             "showInNav": self.show_in_nav,
             "metaTitle": _pick(self.i18n, locale, "meta_title", self.meta_title),
             "metaDescription": _pick(self.i18n, locale, "meta_description", self.meta_description),
+            "publishedAt": self.published_at.isoformat() if self.published_at else None,
             "locales": sorted((self.i18n or {}).keys()),
         }
 
@@ -124,7 +125,6 @@ class Page(TimestampMixin, db.Model):
         item["bodyMarkdown"] = _pick(self.i18n, locale, "body_markdown", self.body_markdown)
         item["status"] = self.status
         item["canonicalUrl"] = self.canonical_url
-        item["publishedAt"] = self.published_at.isoformat() if self.published_at else None
         item["sections"] = _pick(self.i18n, locale, "sections", self.sections)
         item["localBusinessOverrides"] = self.local_business_overrides or {}
         return item

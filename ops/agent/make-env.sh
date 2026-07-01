@@ -18,14 +18,29 @@ SITE_LOCALES="${SITE_LOCALES:-en}"
 SITE_INDUSTRY="${SITE_INDUSTRY:-education}"
 SITE_AUDIENCE="${SITE_AUDIENCE:-students and independent creators}"
 SITE_REGION="${SITE_REGION:-United States}"
-INSTANCE_NAME="${INSTANCE_NAME:-homestead-site}"
+
+# re-runs must not rotate secrets or renumber the compose project — deploy.sh calls this
+# script unconditionally on every run, so recover prior values from the env files it wrote
+# before falling back to defaults/generation. Explicitly exported env vars still win.
+# INSTANCE_NAME: no default here — deploy.sh's `compose()` only passes `-p "$INSTANCE_NAME"`
+# when the caller exported it, so writing a default into .env would make update.sh (which
+# reads INSTANCE_NAME back from .env) pass -p with a name deploy.sh never used, targeting
+# the wrong compose project. Stays empty ⇒ omitted from .env ⇒ both scripts agree on the
+# default (directory-name) project. See matching note in deploy.sh/update.sh.
+envval(){ sed -n "s/^$2=//p" "$1" 2>/dev/null | tail -n 1 || true; }
+INSTANCE_NAME="${INSTANCE_NAME:-$(envval .env INSTANCE_NAME)}"
+FRONTEND_PORT="${FRONTEND_PORT:-$(envval .env FRONTEND_PORT)}"
 FRONTEND_PORT="${FRONTEND_PORT:-3000}"
+BACKEND_PORT="${BACKEND_PORT:-$(envval .env BACKEND_PORT)}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
+POSTGRES_PORT="${POSTGRES_PORT:-$(envval .env POSTGRES_PORT)}"
 POSTGRES_PORT="${POSTGRES_PORT:-55433}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(envval .env POSTGRES_PASSWORD)}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(openssl rand -hex 16)}"
+SECRET_KEY="${SECRET_KEY:-$(envval backend/.env SECRET_KEY)}"
 SECRET_KEY="${SECRET_KEY:-$(openssl rand -hex 32)}"
-GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:-}"
-DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-}"
+GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:-$(envval backend/.env GOOGLE_CLIENT_ID)}"
+DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-$(envval backend/.env DEEPSEEK_API_KEY)}"
 
 # webchat — if the host bridge is configured (ops/webchat-bridge/.env), carry its token
 # and port over so backend↔bridge auth matches without hand-copying. Explicit env wins.
@@ -43,8 +58,9 @@ fi
 
 # root .env — compose ${} substitution: instance/ports + postgres creds + frontend build args
 # (domain + locales + webchat toggle are baked at build)
+# INSTANCE_NAME line is only written when set — see note above on why an unset/default
+# value here would desync deploy.sh's compose -p flag from update.sh's.
 cat > .env <<EOF
-INSTANCE_NAME=$INSTANCE_NAME
 FRONTEND_PORT=$FRONTEND_PORT
 BACKEND_PORT=$BACKEND_PORT
 POSTGRES_DB=homestead
@@ -58,6 +74,7 @@ NEXT_PUBLIC_SITE_LOCALES=$SITE_LOCALES
 NEXT_PUBLIC_DEFAULT_LOCALE=${SITE_LOCALES%%,*}
 NEXT_PUBLIC_WEBCHAT_ENABLED=$WEBCHAT_ENABLED
 EOF
+[ -n "$INSTANCE_NAME" ] && echo "INSTANCE_NAME=$INSTANCE_NAME" >> .env
 
 # backend/.env — DATABASE_URL is overridden by compose (points at the postgres service), so it's omitted here
 cat > backend/.env <<EOF
@@ -82,7 +99,7 @@ EOF
 
 echo "[make-env] wrote .env + backend/.env"
 echo "[make-env]   site=$SITE_DOMAIN  api=$API_DOMAIN  admin=$ADMIN_EMAIL  name=$SITE_NAME  locales=$SITE_LOCALES"
-echo "[make-env]   instance=$INSTANCE_NAME  ports=$FRONTEND_PORT/$BACKEND_PORT/$POSTGRES_PORT (frontend/backend/postgres, 127.0.0.1 only)"
+echo "[make-env]   instance=${INSTANCE_NAME:-(default compose project)}  ports=$FRONTEND_PORT/$BACKEND_PORT/$POSTGRES_PORT (frontend/backend/postgres, 127.0.0.1 only)"
 echo "[make-env]   industry=$SITE_INDUSTRY  audience=$SITE_AUDIENCE  region=$SITE_REGION"
 [ -z "$GOOGLE_CLIENT_ID" ] && echo "[make-env]   (no GOOGLE_CLIENT_ID → browser login off; use 'flask token issue' for admin)"
 [ "$WEBCHAT_ENABLED" = true ] && [ -z "$WEBCHAT_BRIDGE_TOKEN" ] \

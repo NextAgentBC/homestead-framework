@@ -50,7 +50,10 @@ if [ "$SKIP_TUNNEL" = 0 ]; then
 fi
 BACKEND_PORT="${BACKEND_PORT:-8000}"; FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 TUNNEL_NAME="${TUNNEL_NAME:-${INSTANCE_NAME:-homestead}}"
-# compose project name follows INSTANCE_NAME so N clones coexist on one host
+# compose project name follows INSTANCE_NAME so N clones coexist on one host. Only add -p
+# when INSTANCE_NAME is explicitly exported (unset ⇒ default directory-name project) —
+# make-env.sh mirrors this by only writing INSTANCE_NAME= into .env when it's set, so
+# update.sh's env-file readback stays in sync with the project this script actually used.
 compose(){ docker compose ${INSTANCE_NAME:+-p "$INSTANCE_NAME"} "$@"; }
 
 # ── 2/8 env files (secrets auto-generated, idempotent) ──────────────────────────────────
@@ -112,11 +115,16 @@ fi
 # ── 8/8 verify (the success gate) ────────────────────────────────────────────────────────
 STEP="verify"
 echo "[deploy] 8/8 verifying…"
-if ! FRONTEND_PORT="$FRONTEND_PORT" BACKEND_PORT="$BACKEND_PORT" bash ops/agent/verify.sh; then
-  if [ "$SKIP_TUNNEL" = 1 ]; then
+if [ "$SKIP_TUNNEL" = 1 ]; then
+  # local reachability is still a hard gate even without a tunnel; only the public/tunnel
+  # checks (which are expected to fail before manual ingress exists) are advisory.
+  SKIP_PUBLIC=1 FRONTEND_PORT="$FRONTEND_PORT" BACKEND_PORT="$BACKEND_PORT" bash ops/agent/verify.sh
+  if ! FRONTEND_PORT="$FRONTEND_PORT" BACKEND_PORT="$BACKEND_PORT" bash ops/agent/verify.sh; then
     echo "[deploy] ⚠ public checks failed — expected before your manual tunnel is up."
     echo "         re-run 'bash ops/agent/verify.sh' once ingress is in place."
-  else
+  fi
+else
+  if ! FRONTEND_PORT="$FRONTEND_PORT" BACKEND_PORT="$BACKEND_PORT" bash ops/agent/verify.sh; then
     echo "[deploy]     retrying once after a cloudflared restart (new container IPs)…"
     docker restart "${TUNNEL_NAME}-cloudflared" >/dev/null 2>&1 || true
     sleep 30

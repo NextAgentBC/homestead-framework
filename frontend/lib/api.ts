@@ -11,7 +11,7 @@ export type Nap = {
   country: string;
   latitude: number | null;
   longitude: number | null;
-  hours: { day: string; opens: string; closes: string }[];
+  hours: { days: string[]; opens: string; closes: string }[];
   serviceAreas: string[];
 };
 

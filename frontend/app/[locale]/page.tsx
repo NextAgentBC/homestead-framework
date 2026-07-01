@@ -5,7 +5,7 @@ import { NewsletterForm } from "@/components/newsletter-form";
 import { SectionRenderer } from "@/components/sections";
 import { cookies } from "next/headers";
 import { getDesign, getPosts, getSite, getPreview, PREVIEW_COOKIE } from "@/lib/api";
-import { serviceJsonLd, renderJsonLdScripts } from "@/lib/schema";
+import { faqPageJsonLd, serviceJsonLd, renderJsonLdScripts } from "@/lib/schema";
 import { alternatesFor, loadMessages, normalizeLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -37,9 +37,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     })
   );
 
+  // FAQPage doesn't depend on NAP, so it's emitted regardless of the
+  // legalName gate above — only skipped for demo/industry previews.
+  const faqNodes = previewIndustry
+    ? []
+    : (design.sections ?? []).filter((s) => s.type === "faq").map((s) => faqPageJsonLd(s.content?.items ?? []));
+
   return (
     <main className="main">
-      {renderJsonLdScripts(serviceNodes)}
+      {renderJsonLdScripts([...faqNodes, ...serviceNodes])}
       <SectionRenderer sections={design.sections ?? []} site={site} />
 
       <section className="section">

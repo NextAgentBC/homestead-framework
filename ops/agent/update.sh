@@ -11,7 +11,10 @@ set -euo pipefail
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || echo "$(dirname "$0")/../..")"
 
 # fill unset values from the env files so a bare `bash ops/agent/update.sh` just works
-envval(){ sed -n "s/^$2=//p" "$1" 2>/dev/null | tail -n 1; }
+envval(){ sed -n "s/^$2=//p" "$1" 2>/dev/null | tail -n 1 || true; }
+# INSTANCE_NAME stays empty unless .env has it (make-env.sh only writes it when explicitly
+# set), so the -p flag below only fires when deploy.sh actually used a named project —
+# keeping this script's compose project selection in sync with deploy.sh's.
 INSTANCE_NAME="${INSTANCE_NAME:-$(envval .env INSTANCE_NAME)}"
 FRONTEND_PORT="${FRONTEND_PORT:-$(envval .env FRONTEND_PORT)}"
 BACKEND_PORT="${BACKEND_PORT:-$(envval .env BACKEND_PORT)}"
