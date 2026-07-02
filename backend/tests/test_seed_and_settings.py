@@ -59,9 +59,9 @@ def test_rebrand_updates_site_identity(client, auth):
 
 
 def test_nap_settings_roundtrip(client, auth):
-    """The full NAP set survives PATCH → public GET /api/site field-for-field
-    (real Vancouver Power Wash Pro data). NAP has no env fallback: unset fields
-    come back empty, and what the admin stores is exactly what JSON-LD gets."""
+    """The full NAP set survives PATCH → public GET /api/site field-for-field.
+    NAP has no env fallback: unset fields come back empty, and what the admin
+    stores is exactly what JSON-LD gets."""
     # Before anything is stored, every NAP field is explicitly empty (no env leak).
     empty = client.get("/api/site").get_json()["item"]["nap"]
     assert empty["legalName"] == "" and empty["phone"] == ""
@@ -70,36 +70,36 @@ def test_nap_settings_roundtrip(client, auth):
 
     hours = [{"days": ["Mo", "Tu", "We", "Th", "Fr", "Sa"], "opens": "09:00", "closes": "18:00"}]
     payload = {
-        "legalName": "Vancouver Power Wash Pro",
-        "phone": "778-259-4555",
-        "email": "info@vancouverwashpro.ca",
-        "addressStreet": "Unit 36, 1959 165A St",
-        "addressCity": "Surrey",
+        "legalName": "Example Home Services Ltd.",
+        "phone": "+1-555-0100",
+        "email": "hello@example.com",
+        "addressStreet": "100 Example St",
+        "addressCity": "Springfield",
         "addressRegion": "BC",
-        "addressPostalCode": "V3Z 1K3",
+        "addressPostalCode": "A1A 1A1",
         "addressCountry": "CA",
-        "latitude": 49.031,
-        "longitude": -122.756,
+        "latitude": 49.0,
+        "longitude": -123.0,
         "businessHours": hours,
-        "serviceAreas": ["Surrey", "Vancouver", "Burnaby", "Richmond", "Coquitlam"],
+        "serviceAreas": ["Springfield", "Shelbyville", "Ogdenville", "Capital City", "North Haverbrook"],
     }
     res = client.patch("/api/admin/site/settings", headers=auth, json=payload)
     assert res.status_code == 200
     assert set(payload) <= set(res.get_json()["item"]["changed"])
 
     nap = client.get("/api/site").get_json()["item"]["nap"]
-    assert nap["legalName"] == "Vancouver Power Wash Pro"
-    assert nap["phone"] == "778-259-4555"
-    assert nap["email"] == "info@vancouverwashpro.ca"
-    assert nap["street"] == "Unit 36, 1959 165A St"
-    assert nap["city"] == "Surrey"
+    assert nap["legalName"] == "Example Home Services Ltd."
+    assert nap["phone"] == "+1-555-0100"
+    assert nap["email"] == "hello@example.com"
+    assert nap["street"] == "100 Example St"
+    assert nap["city"] == "Springfield"
     assert nap["region"] == "BC"
-    assert nap["postalCode"] == "V3Z 1K3"
+    assert nap["postalCode"] == "A1A 1A1"
     assert nap["country"] == "CA"
-    assert nap["latitude"] == 49.031
-    assert nap["longitude"] == -122.756
+    assert nap["latitude"] == 49.0
+    assert nap["longitude"] == -123.0
     assert nap["hours"] == hours
-    assert nap["serviceAreas"] == ["Surrey", "Vancouver", "Burnaby", "Richmond", "Coquitlam"]
+    assert nap["serviceAreas"] == ["Springfield", "Shelbyville", "Ogdenville", "Capital City", "North Haverbrook"]
 
 
 def test_page_local_business_overrides_roundtrip(client, auth):
