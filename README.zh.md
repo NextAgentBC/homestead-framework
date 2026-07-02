@@ -71,10 +71,13 @@ bash ops/agent/deploy.sh                    # 环境 → 构建 → 健康检查
 
 `deploy.sh` 幂等且自校验——报错修好后重跑即可。首次启动时站点已经是选定行业的完整多页 demo。之后用聊天或 API 定制,再把机器人交给店主。
 
+- **签单→交付清单($100 怎么赚到的):** [`docs/runbook-client-delivery.md`](docs/runbook-client-delivery.md)——计时、分步、带验收门
 - **完整无头部署 runbook(给 AI agent):** [`AGENT-DEPLOY.md`](AGENT-DEPLOY.md)
 - **把已部署的站变成客户的:** [`docs/getting-started.zh.md`](docs/getting-started.zh.md)——换行业 → 换图 → 改文案 → 双语 → 一致性验收
 - **一台主机多个客户:** [`docs/multi-instance.md`](docs/multi-instance.md)
 - **更新已上线的站:** `bash ops/agent/update.sh`
+
+按角色索引的全部文档(买家 / 店主 / 运营 / 开发者):[`docs/README.md`](docs/README.md)。
 
 ---
 
@@ -88,6 +91,8 @@ bash ops/agent/deploy.sh                    # 环境 → 构建 → 健康检查
 > _(访客在网站上提问)_ → 镜像到你的 Telegram;回一句就接管对话
 
 每种区块还有自己的轻量技能(`加个 FAQ`、`加个价格表`……),最终都路由到编排引擎。聊天大脑是**沙箱、无工具**的——它碰不到服务器,只能改公开站点的内容。
+
+从零搭起这套(OpenClaw + Telegram bot,以及三种交付形态——运营代管 / 共享 / 每客户独立):[`docs/telegram-agent-setup.md`](docs/telegram-agent-setup.md)。交给店主的大白话手册:[`docs/owner-manual.zh.md`](docs/owner-manual.zh.md) · 网站自带 AI 客服(给店主看):[`docs/webchat-for-owners.zh.md`](docs/webchat-for-owners.zh.md)。
 
 技能↔API 对照:[`skills/README.md`](skills/README.md) · [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md)。
 

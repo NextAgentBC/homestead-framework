@@ -71,10 +71,13 @@ bash ops/agent/deploy.sh                    # env → build → health → token
 
 `deploy.sh` is idempotent and self-verifying — re-run it after fixing anything it reports. On first boot the site is already a complete, multi-page demo in the chosen industry. Then customize by chat or API, and hand the owner their bot.
 
+- **Sign → deliver checklist (how the $100 gets earned):** [`docs/runbook-client-delivery.md`](docs/runbook-client-delivery.md) — timed, step-by-step, with an acceptance gate
 - **Full headless runbook (for an AI agent):** [`AGENT-DEPLOY.md`](AGENT-DEPLOY.md)
 - **Make a deployed site the client's:** [`docs/getting-started.zh.md`](docs/getting-started.zh.md) — rebrand → swap photos → edit copy → translate → consistency check
 - **Many clients on one host:** [`docs/multi-instance.md`](docs/multi-instance.md)
 - **Update a live site:** `bash ops/agent/update.sh`
+
+All docs, indexed by who you are (buyer / owner / operator / developer): [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -88,6 +91,8 @@ Once deployed, the site is driven by an OpenClaw agent exposed as a **Telegram b
 > _(a visitor asks a question on the site)_ → mirrored to your Telegram; reply once to take over the chat
 
 Each block type also has its own lightweight skill (`add an FAQ`, `add a pricing table`, …) that routes to the composition engine. The chat brain is **sandboxed and tool-less** — it can't touch the server, only the public site's content.
+
+Set this up from scratch (OpenClaw + Telegram bot, and the three delivery models — operator-managed / shared / per-client): [`docs/telegram-agent-setup.md`](docs/telegram-agent-setup.md). Hand the owner a plain-language guide: [`docs/owner-manual.zh.md`](docs/owner-manual.zh.md) · the site's built-in AI live chat, for owners: [`docs/webchat-for-owners.zh.md`](docs/webchat-for-owners.zh.md).
 
 Skills ↔ API map: [`skills/README.md`](skills/README.md) · [`docs/REFERENCE.zh.md`](docs/REFERENCE.zh.md).
 
