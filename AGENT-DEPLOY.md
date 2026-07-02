@@ -126,10 +126,16 @@ Use this only when the human provided an exported site pack. A site pack is the 
 an instructor's actual customized Homestead instance (active design profile, sections, pages,
 i18n strings, and media). Do not guess a pack name.
 
-> **Status: not yet shipped.** The site-pack export/import CLI (`flask site export` /
-> `flask site import`) and its `ops/agent/apply-site-pack.sh` wrapper are on the roadmap but do
-> not exist in this repo yet. Until they land, reproduce a customized site through the admin API
-> (design + compose + pages + media endpoints) or start from a built-in preset (§4a).
+Apply the pack the human gave you with the wrapper — it copies the pack into the backend container
+and runs `flask site import`, honoring `INSTANCE_NAME`:
+
+```bash
+bash ops/agent/apply-site-pack.sh <pack.tar.gz> --rebrand-name "Client Co"
+```
+
+A site pack carries the design/pages/UI strings/media but **not** NAP — after applying, set the
+client's contact info via `PATCH /api/admin/site/settings` (the import prints this reminder).
+Full workflow, pack format, and the media-URL / NAP portability design: [`docs/site-packs.md`](docs/site-packs.md).
 
 If no preset and no site pack were provided, continue with the auto-seeded demo and report that the
 deployment is the default seeded Homestead demo (industry from `SITE_INDUSTRY`).

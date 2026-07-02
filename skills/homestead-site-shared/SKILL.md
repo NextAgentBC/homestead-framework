@@ -23,15 +23,57 @@ export HOMESTEAD_SITE_API="https://your-api.example.com/api"   # this deployment
 
 Public routes: `$HOMESTEAD_SITE_API/...` (e.g. `/blogs`). Admin routes: `$HOMESTEAD_SITE_API/admin/...`.
 
+The `HOMESTEAD_SITE_API` / `HOMESTEAD_SITE_TOKEN` pair above is the **single-site** shortcut.
+When one operator runs several sites, don't juggle those by hand — use the registry below.
+
+## 多站运营(site registry)
+
+一个 operator 常常同时管好几个客户站。约定一个注册表把"站名 → api/token/目录"记在一处,
+技能每次动手前先**确定当前是哪个站**,再从注册表取该站的 `api` / `token` / `dir`。
+
+**注册表:`~/.homestead/sites.json`**
+
+```json
+{
+  "acme":   { "api": "https://acme-api.example.com/api",   "token": "<jwt>", "dir": "/home/ubuntu/projects/homestead-acme" },
+  "globex": { "api": "https://globex-api.example.com/api", "token": "<jwt>", "dir": "/home/ubuntu/projects/homestead-globex" }
+}
+```
+
+- `api` → export 成 `HOMESTEAD_SITE_API`(所有公开/admin 路由的基址)。
+- `token` → export 成 `HOMESTEAD_SITE_TOKEN`(admin 路由的 Bearer;失效就按上面的 "Auth" 用该站
+  的 `dir` 重签一枚,写回注册表)。
+- `dir` → 该站 clone 目录,即上面 Auth 用的 `$HOMESTEAD_SITE_DIR`(签 token / 跑 compose 都在这)。
+
+**确定"当前站"的顺序**:① 用户在本轮点名了哪个站(如"给 acme 加篇博客")→ 用它;② 否则
+用上次用过的站(会话里最近一次选定的);③ 都没有且注册表只有一个站 → 用那个;④ 有多个又
+没线索 → **先问用户是哪个站**,别乱猜(改错站是事故)。
+
+**选定后加载它**(jq 从注册表取值,一次性 export 三样):
+
+```bash
+site="acme"                                   # 第①/②/③步定下来的站名
+cfg=~/.homestead/sites.json
+export HOMESTEAD_SITE_API="$(jq -r --arg s "$site" '.[$s].api'   "$cfg")"
+export HOMESTEAD_SITE_TOKEN="$(jq -r --arg s "$site" '.[$s].token' "$cfg")"
+export HOMESTEAD_SITE_DIR="$(jq -r --arg s "$site" '.[$s].dir'   "$cfg")"
+```
+
+单站场景无需注册表:直接 export `HOMESTEAD_SITE_API`(和需要时 `HOMESTEAD_SITE_TOKEN` /
+`HOMESTEAD_SITE_DIR`)即可,一切照旧。运维侧按站批量跑 update/verify/backup 见 `ops/fleet/`。
+
 ## Auth (admin token)
 
 Admin routes require `Authorization: Bearer <jwt>`. Two ways to get one:
 
 1. **Interactive (browser):** Google Sign-In on the site (`POST /auth/google`).
-2. **Non-interactive (agents — no browser):** run where the backend runs:
+2. **Non-interactive (agents — no browser):** run where the backend runs, pointing at the
+   *current* site's clone directory (`$HOMESTEAD_SITE_DIR`, or the `dir` from the registry —
+   see "多站运营" below). Never hard-code a single path once more than one site exists:
 
 ```bash
-export HOMESTEAD_SITE_TOKEN="$(docker compose -f /home/ubuntu/projects/homestead-site/docker-compose.yml \
+: "${HOMESTEAD_SITE_DIR:?set to the current site's clone dir, e.g. /home/ubuntu/projects/homestead-<name>}"
+export HOMESTEAD_SITE_TOKEN="$(docker compose -f "$HOMESTEAD_SITE_DIR/docker-compose.yml" \
   exec -T backend flask --app app.main token issue)"
 ```
 
