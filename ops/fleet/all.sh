@@ -5,13 +5,18 @@
 # instance with that row's INSTANCE_NAME + domains + ports, and prints a pass/fail table.
 #
 # Usage:
-#   bash ops/fleet/all.sh <update|verify|backup|token> <instances.csv>
+#   bash ops/fleet/all.sh <status|update|verify|backup|token> <instances.csv> [--json]
 #
 # Actions (per row):
+#   status   INSTANCE_NAME/DIR/domains/ports           → ops/fleet/status.sh   (health probe: site/api/containers/db/backup/tunnel)
 #   update   cd dir; INSTANCE_NAME/TUNNEL_NAME/…/ports → ops/agent/update.sh   (git pull + rebuild + retunnel + verify)
 #   verify   cd dir; SITE_DOMAIN/API_DOMAIN/ports      → ops/agent/verify.sh   (local + public reachability)
 #   backup   cd dir; INSTANCE_NAME                      → ops/backup/backup.sh  (pg dump + media tar)
 #   token    cd dir; mint a fresh admin token for the row's instance (flask token issue in-container)
+#
+# `status` is the fleet health glance: it renders a per-probe table (or, with --json, a JSON
+# array for a dashboard). It exits non-zero only if some instance is DOWN — WARN (e.g. a
+# stale/missing backup while the site is live) is reported but does NOT fail the batch.
 #
 # CSV format: see ops/fleet/instances.example.csv. Header + '#'-comment lines are skipped.
 # Columns (in order): instance,dir,site_domain,api_domain,tunnel_name,frontend_port,backend_port
@@ -23,10 +28,15 @@ set -euo pipefail
 
 ACTION="${1:-}"
 CSV="${2:-}"
+OPT="${3:-}"           # optional 3rd arg; only --json (status) is recognised
+JSON=0
+[ "$OPT" = "--json" ] && JSON=1
 
 usage(){
   cat <<'EOF'
-usage: bash ops/fleet/all.sh <update|verify|backup|token> <instances.csv>
+usage: bash ops/fleet/all.sh <status|update|verify|backup|token> <instances.csv> [--json]
+  status  health probe per instance → per-probe table (site/api/containers/db/backup/tunnel)
+          --json emits a JSON array for a dashboard; exits non-zero only if any is DOWN
   update  git pull + rebuild + restart tunnel + verify, per instance (ops/agent/update.sh)
   verify  local + public reachability, per instance            (ops/agent/verify.sh)
   backup  Postgres dump + media tarball, per instance          (ops/backup/backup.sh)
@@ -36,7 +46,7 @@ EOF
   exit 2
 }
 
-case "$ACTION" in update|verify|backup|token) ;; *) usage;; esac
+case "$ACTION" in status|update|verify|backup|token) ;; *) usage;; esac
 [ -n "$CSV" ] && [ -f "$CSV" ] || { echo "[fleet] csv not found: '$CSV'"; usage; }
 
 # repo root of THIS clone — where ops/agent + ops/backup live (scripts are shared code,
@@ -49,6 +59,92 @@ if [ "$ACTION" = backup ] && [ ! -f "$BACKUP_SH" ]; then
   echo "[fleet] ❌ action 'backup' needs $BACKUP_SH but it's missing."
   echo "        (Pull the ops/backup toolchain into this clone, or run a different action.)"
   exit 1
+fi
+
+# status.sh is the per-instance health probe this script fans out for the `status` action.
+STATUS_SH="$REPO_ROOT/ops/fleet/status.sh"
+if [ "$ACTION" = status ] && [ ! -f "$STATUS_SH" ]; then
+  echo "[fleet] ❌ action 'status' needs $STATUS_SH but it's missing." >&2
+  exit 1
+fi
+
+# --json is only meaningful for status; reject it elsewhere so a typo isn't silently ignored.
+if [ "$JSON" -eq 1 ] && [ "$ACTION" != status ]; then
+  echo "[fleet] --json is only supported with the 'status' action." >&2
+  usage
+fi
+
+# ── status: fan status.sh out, collect one JSON line per row, render table or JSON array ──
+# Handled separately from the generic loop below: it needs per-probe columns (not just
+# ok/FAIL) and a machine-readable --json mode, and in --json mode it must print ONLY JSON.
+if [ "$ACTION" = status ]; then
+  [ "$JSON" -eq 1 ] || { echo "[fleet] action : status"; echo "[fleet] csv    : $CSV"; echo; }
+
+  STATUS_JSON=()   # one status.sh --json line per instance
+  ANY_DOWN=0
+  while IFS=',' read -r instance dir site api tunnel fport bport _rest; do
+    instance="${instance#"${instance%%[![:space:]]*}"}"
+    instance="${instance%"${instance##*[![:space:]]}"}"
+    case "$instance" in ''|\#*|instance) continue;; esac
+
+    # Probe this row. status.sh exits 1 on DOWN, 0 on OK/WARN; capture its JSON either way.
+    line="$( INSTANCE_NAME="$instance" DIR="$dir" \
+             SITE_DOMAIN="$site" API_DOMAIN="$api" \
+             TUNNEL_NAME="$tunnel" FRONTEND_PORT="$fport" BACKEND_PORT="$bport" \
+             bash "$STATUS_SH" --json 2>/dev/null || true )"
+    # Guard against a totally empty probe (e.g. status.sh crashed) with a synthetic DOWN row.
+    if [ -z "$line" ]; then
+      line="{\"instance\":\"$instance\",\"overall\":\"DOWN\",\"publicSite\":\"?\",\"publicApi\":\"?\",\"containers\":\"n/a\",\"pages\":null,\"lastBackupDays\":-1,\"tunnel\":\"n/a\"}"
+    fi
+    STATUS_JSON+=("$line")
+    case "$line" in *'"overall":"DOWN"'*) ANY_DOWN=1;; esac
+  done < "$CSV"
+
+  if [ "${#STATUS_JSON[@]}" -eq 0 ]; then
+    if [ "$JSON" -eq 1 ]; then echo "[]"; else echo "  (no instance rows found in $CSV)"; fi
+    exit 1
+  fi
+
+  if [ "$JSON" -eq 1 ]; then
+    # emit a single JSON array (comma-joined object lines) — for dashboard.sh to consume.
+    printf '['
+    for i in "${!STATUS_JSON[@]}"; do
+      [ "$i" -gt 0 ] && printf ','
+      printf '%s' "${STATUS_JSON[$i]}"
+    done
+    printf ']\n'
+  else
+    # pull one field out of a status JSON line by key (string or number). Not a general JSON
+    # parser — matches "<key>":<value> where value is a quoted string or a bare number/null.
+    jget(){ printf '%s' "$1" | sed -n "s/.*\"$2\":\"\{0,1\}\([^\",}]*\)\"\{0,1\}.*/\1/p"; }
+    echo "════════ fleet status ════════"
+    printf '  %-22s %-4s %-4s %-7s %-6s %-8s %-6s %s\n' \
+      "INSTANCE" "SITE" "API" "CONT" "PAGES" "BACKUP" "TUN" "OVERALL"
+    for line in "${STATUS_JSON[@]}"; do
+      inst="$(jget "$line" instance)"
+      overall="$(jget "$line" overall)"
+      psite="$(jget "$line" publicSite)"
+      papi="$(jget "$line" publicApi)"
+      cont="$(jget "$line" containers)"
+      pages="$(jget "$line" pages)"
+      lbd="$(jget "$line" lastBackupDays)"
+      tun="$(jget "$line" tunnel)"
+      [ "$pages" = "null" ] && pages="?"
+      if [ "$lbd" = "-1" ]; then bk="none"; else bk="${lbd}d"; fi
+      printf '  %-22s %-4s %-4s %-7s %-6s %-8s %-6s %s\n' \
+        "$inst" "$psite" "$papi" "$cont" "$pages" "$bk" "$tun" "$overall"
+    done
+    echo "══════════════════════════════"
+    if [ "$ANY_DOWN" -ne 0 ]; then
+      echo "[fleet] ❌ one or more instances are DOWN — see table above."
+    else
+      echo "[fleet] ✅ no instances DOWN (WARN rows, if any, are degraded but live)."
+    fi
+  fi
+
+  # DOWN fails the batch; WARN does not (degraded but the site is still serving).
+  [ "$ANY_DOWN" -ne 0 ] && exit 1
+  exit 0
 fi
 
 echo "[fleet] action : $ACTION"

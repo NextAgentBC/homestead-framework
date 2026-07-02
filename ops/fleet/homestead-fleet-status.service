@@ -1,0 +1,48 @@
+# Refresh the fleet status HTML dashboard and fire Telegram alerts for any WARN/DOWN site.
+# One host-wide job (NOT per-instance) — it reads the whole fleet CSV in one pass.
+#
+# It needs to know (a) which clone holds the ops scripts and (b) which CSV is the live
+# registry; supply both via an EnvironmentFile:
+#     /etc/homestead/fleet.env   containing:
+#         REPO_ROOT=/abs/path/to/a/clone            # any clone with ops/fleet (== all.sh's REPO_ROOT)
+#         FLEET_CSV=/abs/path/to/instances.csv      # your real (gitignored) registry
+#     optional in that file:
+#         DASHBOARD_OUT=/abs/path/homestead-fleet-status.html   # default: $HOME/homestead-fleet-status.html
+#         TELEGRAM_BOT_TOKEN=123456:AA...           # unset -> notify.sh just logs, no push
+#         TELEGRAM_CHAT_ID=-1001234567890
+#
+# Install (system-wide, runs as your ops user — adjust User=/paths to your box):
+#     sudo mkdir -p /etc/homestead
+#     printf 'REPO_ROOT=%s\nFLEET_CSV=%s\n' \
+#       /home/ubuntu/projects/homestead-site \
+#       /home/ubuntu/projects/homestead-site/ops/fleet/instances.csv \
+#       | sudo tee /etc/homestead/fleet.env
+#     sudo cp ops/fleet/homestead-fleet-status.{service,timer} /etc/systemd/system/
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now homestead-fleet-status.timer   # timer drives the service
+#     sudo systemctl start homestead-fleet-status.service        # one-shot test run
+#     journalctl -u homestead-fleet-status.service -n 40         # inspect
+#
+# --user alternative: drop both units in ~/.config/systemd/user/, keep the EnvironmentFile
+# readable by you (e.g. ~/.config/homestead/fleet.env and adjust the path below), then
+# `systemctl --user enable --now homestead-fleet-status.timer` (needs `loginctl enable-linger`).
+[Unit]
+Description=Homestead fleet status dashboard + WARN/DOWN Telegram alerts
+Documentation=file://%h/ops/fleet/README.md
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+# Runs as this user; the user must be able to reach Docker (status.sh probes containers).
+# Change to your ops user on the box.
+User=ubuntu
+EnvironmentFile=/etc/homestead/fleet.env
+# 1) repaint the HTML dashboard from the current fleet status
+# 2) alert to Telegram only if something is WARN/DOWN (silent when all-OK)
+# Both consume `all.sh status <csv> --json`; both are best-effort on delivery but the
+# whole unit fails (visible in journal) if the status check itself can't run.
+ExecStart=/usr/bin/env bash -lc '"${REPO_ROOT}/ops/fleet/dashboard.sh" "${FLEET_CSV}" ${DASHBOARD_OUT:+--out "${DASHBOARD_OUT}"}'
+ExecStart=/usr/bin/env bash -lc '"${REPO_ROOT}/ops/fleet/notify.sh" "${FLEET_CSV}"'
+# Read-only health check — be a good neighbour, don't fight builds/backups for I/O.
+Nice=10
