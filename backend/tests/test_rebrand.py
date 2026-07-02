@@ -79,7 +79,8 @@ def test_beauty_template_is_complete_and_image_ready(client, auth):
 
 
 @pytest.mark.parametrize("industry,prefix", [
-    ("restaurant", "rest"), ("healthcare", "clin"), ("legal", "law"), ("fitness", "fit")])
+    ("restaurant", "rest"), ("healthcare", "clin"), ("legal", "law"), ("fitness", "fit"),
+    ("construction", "cx")])
 def test_other_industry_templates_are_complete_and_image_ready(client, auth, industry, prefix):
     """配齐: the common industries match the beauty bar — full image-ready home + imagery."""
     res = client.post("/api/admin/site/rebrand", headers=auth, json={"industry": industry})

@@ -11,19 +11,21 @@
 #   API_DOMAIN     public hostname for the API    e.g. homestead-api.example.com
 # Optional env:
 #   CF_ZONE        the zone (root domain), e.g. example.com  (auto-derived if unset)
-#   TUNNEL_NAME    default: homestead
+#   INSTANCE_NAME  per-instance prefix (see docs/multi-instance.md); drives the defaults below
+#   TUNNEL_NAME    default: $INSTANCE_NAME, or 'homestead' if neither is set
 #   EDGE_NET       docker network the connector + app share, default: edge
-#   FRONTEND_SVC / BACKEND_SVC  origin services, default the compose aliases.
+#   FRONTEND_SVC / BACKEND_SVC  origin services, default the compose aliases
+#                  (${INSTANCE_NAME:-homestead-site}-frontend / -backend).
 set -euo pipefail
 
 : "${CF_API_TOKEN:?set CF_API_TOKEN}"
 : "${CF_ACCOUNT_ID:?set CF_ACCOUNT_ID}"
 : "${SITE_DOMAIN:?set SITE_DOMAIN (e.g. homestead.example.com)}"
 : "${API_DOMAIN:?set API_DOMAIN (e.g. homestead-api.example.com)}"
-TUNNEL_NAME="${TUNNEL_NAME:-homestead}"
+TUNNEL_NAME="${TUNNEL_NAME:-${INSTANCE_NAME:-homestead}}"
 EDGE_NET="${EDGE_NET:-edge}"
-FRONTEND_SVC="${FRONTEND_SVC:-http://homestead-site-frontend:3000}"
-BACKEND_SVC="${BACKEND_SVC:-http://homestead-site-backend:8000}"
+FRONTEND_SVC="${FRONTEND_SVC:-http://${INSTANCE_NAME:-homestead-site}-frontend:3000}"
+BACKEND_SVC="${BACKEND_SVC:-http://${INSTANCE_NAME:-homestead-site}-backend:8000}"
 API=https://api.cloudflare.com/client/v4
 
 command -v jq >/dev/null || { echo "need 'jq' (apt-get install -y jq)"; exit 1; }

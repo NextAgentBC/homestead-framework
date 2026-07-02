@@ -9,7 +9,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/health` | Health check |
-| `GET` | `/api/site` | Public site config (name, locales, …) |
+| `GET` | `/api/site` | Public site config (name, locales, …) + the business's `nap` object (see [NAP](#nap--local-business-data)) |
 | `GET` | `/api/design` | Active design profile — tokens + sections (`?locale=`) |
 | `GET` | `/api/blocks` | Block catalog: types, variants, fields, icons |
 | `GET` | `/api/patterns` · `/api/patterns/:slug` | Saved section patterns (capture library) |
@@ -36,6 +36,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `GET` `PATCH` | `/api/admin/design` | Read / update tokens, sections, voice |
 | `POST` | `/api/admin/design/generate` | Apply a preset/industry, or generate from competitors |
 | `POST` | `/api/admin/site/rebrand` | **Atomic industry switch**: regenerate home, drop stale per-locale section overrides (home + pages), snapshot each surface, return the template's declared `imagery` (prompts + targets) + the consistency audit. `{industry\|preset, competitorUrls?, brandName?, dryRun?}`. A rebrand, not a tweak |
+| `GET` `PATCH` | `/api/admin/site/settings` | Read / set the runtime site identity (`siteName`, `industry`, `audience`, `region`, `assistantName` — blank falls back to env) and the NAP fields (see [NAP](#nap--local-business-data)) |
 | `POST` | `/api/admin/design/analyze-competitors` | Fetch competitor signals → update design |
 | `GET` | `/api/admin/surfaces` | List every editable surface (home + pages) + locales |
 | `GET` | `/api/admin/consistency` | Audit coherence across every surface×locale (structural drift · missing/untranslated copy · wrong-language text · industry residue) → `{ok, findings[], summary}` |
@@ -52,6 +53,14 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 | `DELETE` | `/api/admin/media/:filename` | Delete a hosted image |
 | `GET` | `/api/admin/chat` · `…/:sessionId` | List live-chat conversations / read one transcript |
 | `POST` | `/api/admin/chat/:sessionId/reply` · `…/close` | Take over a chat (reply) / close-reopen it |
+
+## NAP & Local Business Data
+
+The business's NAP (name / address / phone) lives **once**, on the site settings — never per page — so JSON-LD, footer, and contact info can never disagree (NAP consistency is one of the heaviest local-search / AI-visibility signals).
+
+- `GET /api/site` includes a `nap` object: `{ legalName, phone, email, street, city, region, postalCode, country, latitude, longitude, hours, serviceAreas }`. Unlike the identity fields, **NAP has no env fallback** — unset fields are `""` / `[]` / `null` and consumers omit them (e.g. no LocalBusiness JSON-LD until a real `legalName` is set).
+- `PATCH /api/admin/site/settings` additionally accepts `legalName`, `phone`, `email`, `addressStreet`, `addressCity`, `addressRegion`, `addressPostalCode`, `addressCountry` (strings), `latitude` / `longitude` (numbers or `null`), `businessHours` (list of `{days, opens, closes}`), and `serviceAreas` (list of city names). A wrongly-typed field is ignored, not an error.
+- City×service landing pages narrow (never restate) the NAP: `POST`/`PATCH /api/admin/pages` accept a `local_business_overrides` object, e.g. `{"service_areas": ["Surrey"], "service_type": "Pressure Washing"}`. It is returned as `localBusinessOverrides` on the page **detail** (not on list cards) and is deliberately not localizable — service cities don't translate.
 
 ## Page composition (blocks)
 

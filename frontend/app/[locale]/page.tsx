@@ -5,6 +5,7 @@ import { NewsletterForm } from "@/components/newsletter-form";
 import { SectionRenderer } from "@/components/sections";
 import { cookies } from "next/headers";
 import { getDesign, getPosts, getSite, getPreview, PREVIEW_COOKIE } from "@/lib/api";
+import { faqPageJsonLd, serviceJsonLd, renderJsonLdScripts } from "@/lib/schema";
 import { alternatesFor, loadMessages, normalizeLocale, t } from "@/lib/i18n";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -21,8 +22,30 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const [posts, messages] = await Promise.all([getPosts(locale), loadMessages(locale)]);
   const featured = posts.slice(0, 3);
 
+  // One Service JSON-LD node per real service (the features block's items),
+  // each referencing the layout's LocalBusiness node by @id. Skipped for
+  // demo/industry previews and until NAP has been configured.
+  const emitLocalSchema = !previewIndustry && !!site.nap?.legalName;
+  const serviceItems = emitLocalSchema
+    ? ((design.sections ?? []).find((s) => s.type === "features")?.content?.items ?? []).filter((item) => item.title)
+    : [];
+  const serviceNodes = serviceItems.map((item) =>
+    serviceJsonLd(site, site.nap, {
+      serviceType: item.title || "",
+      description: item.body || "",
+      url: `${site.url}/${locale}`
+    })
+  );
+
+  // FAQPage doesn't depend on NAP, so it's emitted regardless of the
+  // legalName gate above — only skipped for demo/industry previews.
+  const faqNodes = previewIndustry
+    ? []
+    : (design.sections ?? []).filter((s) => s.type === "faq").map((s) => faqPageJsonLd(s.content?.items ?? []));
+
   return (
     <main className="main">
+      {renderJsonLdScripts([...faqNodes, ...serviceNodes])}
       <SectionRenderer sections={design.sections ?? []} site={site} />
 
       <section className="section">

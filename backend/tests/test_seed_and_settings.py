@@ -56,3 +56,65 @@ def test_rebrand_updates_site_identity(client, auth):
     assert site["name"] == "Trattoria Sole"
     assert site["audience"] == "local families"
     assert site["assistantName"] == "Trattoria Sole"   # assistant follows the new brand
+
+
+def test_nap_settings_roundtrip(client, auth):
+    """The full NAP set survives PATCH → public GET /api/site field-for-field.
+    NAP has no env fallback: unset fields come back empty, and what the admin
+    stores is exactly what JSON-LD gets."""
+    # Before anything is stored, every NAP field is explicitly empty (no env leak).
+    empty = client.get("/api/site").get_json()["item"]["nap"]
+    assert empty["legalName"] == "" and empty["phone"] == ""
+    assert empty["latitude"] is None and empty["longitude"] is None
+    assert empty["hours"] == [] and empty["serviceAreas"] == []
+
+    hours = [{"days": ["Mo", "Tu", "We", "Th", "Fr", "Sa"], "opens": "09:00", "closes": "18:00"}]
+    payload = {
+        "legalName": "Example Home Services Ltd.",
+        "phone": "+1-555-0100",
+        "email": "hello@example.com",
+        "addressStreet": "100 Example St",
+        "addressCity": "Springfield",
+        "addressRegion": "BC",
+        "addressPostalCode": "A1A 1A1",
+        "addressCountry": "CA",
+        "latitude": 49.0,
+        "longitude": -123.0,
+        "businessHours": hours,
+        "serviceAreas": ["Springfield", "Shelbyville", "Ogdenville", "Capital City", "North Haverbrook"],
+    }
+    res = client.patch("/api/admin/site/settings", headers=auth, json=payload)
+    assert res.status_code == 200
+    assert set(payload) <= set(res.get_json()["item"]["changed"])
+
+    nap = client.get("/api/site").get_json()["item"]["nap"]
+    assert nap["legalName"] == "Example Home Services Ltd."
+    assert nap["phone"] == "+1-555-0100"
+    assert nap["email"] == "hello@example.com"
+    assert nap["street"] == "100 Example St"
+    assert nap["city"] == "Springfield"
+    assert nap["region"] == "BC"
+    assert nap["postalCode"] == "A1A 1A1"
+    assert nap["country"] == "CA"
+    assert nap["latitude"] == 49.0
+    assert nap["longitude"] == -123.0
+    assert nap["hours"] == hours
+    assert nap["serviceAreas"] == ["Springfield", "Shelbyville", "Ogdenville", "Capital City", "North Haverbrook"]
+
+
+def test_page_local_business_overrides_roundtrip(client, auth):
+    """A page's local_business_overrides (city×service narrowing for JSON-LD)
+    persists through create and comes back on the public detail — not on cards."""
+    overrides = {"service_areas": ["Surrey"], "service_type": "Pressure Washing"}
+    res = client.post("/api/admin/pages", headers=auth,
+                      json={"title": "Pressure Washing in Surrey", "slug": "pressure-washing-surrey",
+                            "body_markdown": "Driveways, siding, and decks.", "status": "published",
+                            "local_business_overrides": overrides})
+    assert res.status_code == 201
+    assert res.get_json()["item"]["localBusinessOverrides"] == overrides
+
+    item = client.get("/api/pages/pressure-washing-surrey").get_json()["item"]
+    assert item["localBusinessOverrides"] == overrides
+    # Card payloads stay lean — the override only rides on the detail.
+    cards = client.get("/api/pages").get_json()["items"]
+    assert all("localBusinessOverrides" not in c for c in cards)

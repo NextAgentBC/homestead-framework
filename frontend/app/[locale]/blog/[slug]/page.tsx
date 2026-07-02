@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getPost } from "@/lib/api";
+import { renderJsonLdScripts } from "@/lib/schema";
 import { alternatesFor, normalizeLocale } from "@/lib/i18n";
 
 type PageProps = {
@@ -48,7 +49,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   return (
     <main className="main">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {renderJsonLdScripts([jsonLd])}
       <article className="article">
         <p className="kicker">{post.geoRegion}</p>
         <h1>{post.title}</h1>

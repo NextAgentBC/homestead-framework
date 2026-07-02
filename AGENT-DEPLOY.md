@@ -1,5 +1,17 @@
 # Deploy Homestead with an AI agent (OpenClaw / Codex)
 
+**TL;DR** — one command once the §0 values are exported:
+
+```bash
+export SITE_DOMAIN=… API_DOMAIN=… ADMIN_EMAIL=… CF_API_TOKEN=… CF_ACCOUNT_ID=…
+bash ops/agent/deploy.sh          # preflight → env → build → health → token → preset → tunnel → verify
+```
+
+`deploy.sh` chains every 🤖 step below and is idempotent — re-run it after fixing whatever it
+reports. Use `--skip-tunnel` when ingress is managed manually (e.g. a cert.pem-based tunnel).
+The sections below remain the authoritative step-by-step reference for running the pieces
+individually or debugging a failed step.
+
 **Hand this file to your agent.** It stands up a fully independent Homestead instance
 (its own database, content, design, domain) end-to-end, headless — no dashboard clicking.
 
@@ -103,9 +115,10 @@ fi
 ```
 
 Useful presets: `education`, `minimal`, `tech`, `luxe`, `neon`, `restaurant`, `realestate`,
-`finance`, `playful`. Full list: `minimal`, `bold-dark`, `editorial`, `corporate`, `tech`,
-`healthcare`, `restaurant`, `realestate`, `fitness`, `beauty`, `legal`, `creative`, `luxe`,
-`education`, `nonprofit`, `finance`, `playful`, `neon`.
+`finance`, `playful`, `construction`. Full list: `minimal`, `bold-dark`, `editorial`, `corporate`,
+`tech`, `healthcare`, `restaurant`, `realestate`, `fitness`, `beauty`, `legal`, `creative`, `luxe`,
+`education`, `nonprofit`, `finance`, `playful`, `neon`, `construction` (home services / trades —
+pressure washing, plumbing, electrical, HVAC, landscaping, and other book-a-job local businesses).
 
 ### 4b. Apply an instructor site pack
 
@@ -113,10 +126,10 @@ Use this only when the human provided an exported site pack. A site pack is the 
 an instructor's actual customized Homestead instance (active design profile, sections, pages,
 i18n strings, and media). Do not guess a pack name.
 
-```bash
-# Example only; run the import command supplied with the site pack.
-# bash ops/agent/apply-site-pack.sh "$SITE_PACK"
-```
+> **Status: not yet shipped.** The site-pack export/import CLI (`flask site export` /
+> `flask site import`) and its `ops/agent/apply-site-pack.sh` wrapper are on the roadmap but do
+> not exist in this repo yet. Until they land, reproduce a customized site through the admin API
+> (design + compose + pages + media endpoints) or start from a built-in preset (§4a).
 
 If no preset and no site pack were provided, continue with the auto-seeded demo and report that the
 deployment is the default seeded Homestead demo (industry from `SITE_INDUSTRY`).

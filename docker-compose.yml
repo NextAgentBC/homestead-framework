@@ -25,8 +25,10 @@ services:
     # Reach the host webchat-bridge (systemd --user service on :18791) for live chat.
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # Loopback-only: public traffic enters via the Cloudflare tunnel on `edge`;
+    # the host port is for local debugging. BACKEND_PORT lets N instances share a host.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     volumes:
       - media-data:/app/media      # self-hosted blog images, served at /api/media/<file>
     networks:
@@ -34,7 +36,7 @@ services:
       # Cloudflare tunnel (in infra/) routes homestead-api.* -> this alias on `edge`.
       edge:
         aliases:
-          - homestead-site-backend
+          - ${INSTANCE_NAME:-homestead-site}-backend
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,14 +49,19 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+        NEXT_PUBLIC_SITE_LOCALES: ${NEXT_PUBLIC_SITE_LOCALES:-en,zh}
+        NEXT_PUBLIC_DEFAULT_LOCALE: ${NEXT_PUBLIC_DEFAULT_LOCALE:-en}
+        NEXT_PUBLIC_WEBCHAT_ENABLED: ${NEXT_PUBLIC_WEBCHAT_ENABLED:-true}
+    # Loopback-only: public traffic enters via the Cloudflare tunnel on `edge`;
+    # the host port is for local debugging. FRONTEND_PORT lets N instances share a host.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     networks:
       default: {}
       # Cloudflare tunnel (in infra/) routes homestead.* -> this alias on `edge`.
       edge:
         aliases:
-          - homestead-site-frontend
+          - ${INSTANCE_NAME:-homestead-site}-frontend
     depends_on:
       - backend
 

@@ -6,6 +6,7 @@ import { AuthProvider } from "../providers";
 import { cookies } from "next/headers";
 import { getDesign, getSite, getPages, getPreview, getPreviewPages, getIndustries, PREVIEW_COOKIE } from "@/lib/api";
 import { designCssVariables } from "@/lib/design";
+import { localBusinessJsonLd, renderJsonLdScripts } from "@/lib/schema";
 import { SiteNav } from "@/components/nav";
 import { ChatWidget } from "@/components/chat-widget";
 import { PreviewBanner } from "@/components/preview-banner";
@@ -115,6 +116,11 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       style={designCssVariables(design)}
     >
       <body>
+        {/* Site-level LocalBusiness JSON-LD — only for the real site (never in a
+            demo/industry preview) and only once NAP has actually been configured. */}
+        {!previewIndustry && site.nap?.legalName
+          ? renderJsonLdScripts([localBusinessJsonLd(site, site.nap)])
+          : null}
         <AuthProvider>
           <div className="shell">
             {previewIndustry && <PreviewBanner label={design.name} messages={messages} />}

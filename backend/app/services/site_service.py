@@ -44,6 +44,31 @@ def get_or_create_row() -> SiteSettings:
     return row
 
 
+def nap() -> dict:
+    """The business's NAP (name / address / phone) for JSON-LD and local SEO.
+
+    Unlike :func:`effective`, NAP deliberately has **no env fallback**: it is
+    real-world business fact with a single source of truth (the settings row),
+    and a stale env default would create the "inconsistent NAP" signal local
+    search penalizes most. Unset fields return "" / [] / None; consumers
+    (LocalBusiness JSON-LD, footer) simply omit them."""
+    row = get_row()
+    return {
+        "legalName": (row.legal_name if row else "") or "",
+        "phone": (row.phone if row else "") or "",
+        "email": (row.email if row else "") or "",
+        "street": (row.address_street if row else "") or "",
+        "city": (row.address_city if row else "") or "",
+        "region": (row.address_region if row else "") or "",
+        "postalCode": (row.address_postal_code if row else "") or "",
+        "country": (row.address_country if row else "") or "",
+        "latitude": row.latitude if row else None,
+        "longitude": row.longitude if row else None,
+        "hours": (row.business_hours if row else None) or [],
+        "serviceAreas": (row.service_areas if row else None) or [],
+    }
+
+
 def effective() -> dict:
     """Effective site identity: DB row value where set, else the env default.
     ``assistant_name`` falls back to the brand name when blank, so the chat

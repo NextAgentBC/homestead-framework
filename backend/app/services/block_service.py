@@ -581,6 +581,15 @@ PAGE_TEMPLATES = {
                    ("testimonials", None, {"heading": "Client outcomes"}),
                    ("faq", None, None),
                    ("cta", "banner", {"headline": "Request a consultation", "cta": {"label": "Contact us", "href": "/contact"}})]},
+    "construction": {"label": "Home service / trade",
+        "blurb": "Trust-first: what we do, process, pricing, FAQ, quote CTA.",
+        "blocks": [("hero", "split", {"headline": "Reliable service,", "headlineAccent": "done right the first time.", "subhead": "Licensed, insured, and on time — request a free quote today."}),
+                   ("features", "cards", {"heading": "What we do"}),
+                   ("steps", None, {"heading": "How it works"}),
+                   ("gallery", None, {"heading": "Recent work"}),
+                   ("pricing", None, None),
+                   ("faq", None, None),
+                   ("cta", "banner", {"headline": "Get a free quote", "cta": {"label": "Request a quote", "href": "/contact"}})]},
 }
 
 
