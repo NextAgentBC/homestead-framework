@@ -136,12 +136,16 @@ fitness, beauty, legal, creative, luxe, education, nonprofit, finance, playful, 
 
 A preset changes the active design profile and homepage composition. It does **not** import a
 specific instructor's custom pages, uploaded media, translations, or exact edited sections. To
-reproduce an instructor's actual site, import the site pack they provide, for example:
+reproduce an instructor's actual site, import the site pack they provide with the wrapper (it
+copies the pack into the backend container and runs `flask site import`, honoring `INSTANCE_NAME`):
 
 ```bash
-# Example only; use the command supplied with the site pack.
-# bash ops/agent/apply-site-pack.sh seed-sites/homestead-multitheme
+bash ops/agent/apply-site-pack.sh /path/to/pack.tar.gz --rebrand-name "Client Co"
 ```
+
+A pack carries the design, pages, UI strings, and media — but **not** NAP; set the client's contact
+info afterwards via `PATCH /api/admin/site/settings`. Full workflow and the media-URL / NAP
+portability design: [`site-packs.md`](site-packs.md).
 
 If no preset or site pack is applied, the deployment remains a blank/default Homestead instance.
 

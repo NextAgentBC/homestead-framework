@@ -1,0 +1,13 @@
+# Homestead fleet registry — one row per customer instance on this host.
+# Copy to instances.csv (gitignored / kept out of the repo) and keep it current.
+# Columns:
+#   instance       compose project name == clone dir name == INSTANCE_NAME (see docs/multi-instance.md)
+#   dir            absolute path to that clone directory (all.sh cd's here)
+#   site_domain    public site hostname (through its Cloudflare tunnel)
+#   api_domain     public API hostname (through its Cloudflare tunnel)
+#   tunnel_name    cloudflared tunnel/connector prefix (default == instance)
+#   frontend_port  host-published 127.0.0.1 port (13000+, +10 per instance)
+#   backend_port   host-published 127.0.0.1 port (18000+, +10 per instance)
+instance,dir,site_domain,api_domain,tunnel_name,frontend_port,backend_port
+homestead-acme,/home/ubuntu/projects/homestead-acme,acme.example.com,acme-api.example.com,homestead-acme,13010,18010
+homestead-globex,/home/ubuntu/projects/homestead-globex,globex.example.com,globex-api.example.com,homestead-globex,13020,18020

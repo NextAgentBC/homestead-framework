@@ -1,0 +1,27 @@
+# Templated daily backup for ONE Homestead instance.
+# Instance is the systemd template name (%i) — it is passed to backup.sh as the
+# INSTANCE_NAME / compose project. Enable per instance, e.g.:
+#     homestead-backup@vanwashpro-preview.service
+#
+# The unit needs to know where that instance's clone lives; supply it via an
+# EnvironmentFile named after the instance (see ops/backup/README.md):
+#     /etc/homestead/backup-%i.env   containing:  REPO_ROOT=/abs/path/to/clone
+# Optional in that file: BACKUP_DIR=..., KEEP=7
+#
+# --user vs system: this file works either way. As a --user unit Docker must be
+# reachable by that user (rootless Docker, or the user is in the `docker` group).
+# See README for both install paths.
+[Unit]
+Description=Daily backup for Homestead instance %i (Postgres + media volume)
+Documentation=file://%h/ops/backup/README.md
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/homestead/backup-%i.env
+# REPO_ROOT comes from the EnvironmentFile; %i is passed as the instance argument.
+ExecStart=/usr/bin/env bash ${REPO_ROOT}/ops/backup/backup.sh %i
+# Backups are I/O heavy but not urgent — be a good neighbour.
+Nice=10
+IOSchedulingClass=idle

@@ -1,0 +1,14 @@
+# Daily trigger for homestead-backup@%i.service.
+# Enable per instance, e.g.:  systemctl enable --now homestead-backup@vanwashpro-preview.timer
+[Unit]
+Description=Daily backup timer for Homestead instance %i
+
+[Timer]
+# Early morning, low-traffic. RandomizedDelaySec spreads load when several
+# instances on one host share this timer (avoids N simultaneous pg_dumps).
+OnCalendar=*-*-* 03:15:00
+RandomizedDelaySec=1800
+Persistent=true
+
+[Install]
+WantedBy=timers.target
