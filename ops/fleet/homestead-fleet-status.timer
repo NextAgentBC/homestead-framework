@@ -1,0 +1,17 @@
+# Drives homestead-fleet-status.service every 15 minutes: refresh the dashboard HTML and
+# alert on any WARN/DOWN site. Enable with:
+#     sudo systemctl enable --now homestead-fleet-status.timer
+# (see homestead-fleet-status.service for the full install + /etc/homestead/fleet.env setup)
+[Unit]
+Description=Run the Homestead fleet status dashboard + alerts every 15 minutes
+
+[Timer]
+# First run shortly after boot, then every 15 minutes on a wall-clock grid.
+OnBootSec=3min
+OnUnitActiveSec=15min
+# A small jitter avoids hammering all the public endpoints on the exact same tick.
+RandomizedDelaySec=30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

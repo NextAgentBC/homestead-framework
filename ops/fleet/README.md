@@ -107,3 +107,63 @@ under its own Linux user/linger. Fully independent chat brains.
 `all.sh` is agnostic to this choice — it drives the **website** lifecycle (deploy artifacts,
 health, backups, tokens). The gateway/bridge topology is a separate host-service decision;
 whichever you pick, the per-site website ops are the same rows in this CSV.
+
+## Health glance / dashboard / alerts / scheduling
+
+Beyond the one-shot actions above, this dir has a small health toolchain — a per-instance
+probe, a fleet-wide table, an HTML dashboard, and Telegram alerts — plus a systemd timer that
+runs the dashboard + alerts on a schedule. All four read the **same** source of truth
+(`status.sh`), so "is it up?" is answered in one place. For the *when/what-to-run-when* rhythm
+and the incident playbooks, see [`docs/fleet-maintenance.md`](../../docs/fleet-maintenance.md).
+
+```bash
+# One instance, right now (run inside a clone dir, or with the row's env prefilled):
+bash ops/fleet/status.sh                 # compact human line: site/api/containers/db/backup/tunnel → OK|WARN|DOWN
+bash ops/fleet/status.sh --json          # one JSON object (for tooling)
+
+# Whole fleet — health table (or JSON array for a dashboard). Exits non-zero only if any DOWN:
+bash ops/fleet/all.sh status ops/fleet/instances.csv
+bash ops/fleet/all.sh status ops/fleet/instances.csv --json
+
+# Paint the fleet status into a self-contained HTML page (no CDN/JS; scp it anywhere):
+bash ops/fleet/dashboard.sh ops/fleet/instances.csv          # default out: ~/homestead-fleet-status.html
+bash ops/fleet/dashboard.sh ops/fleet/instances.csv --out /var/www/html/fleet.html
+
+# Alert on any WARN/DOWN via Telegram (silent when all-OK unless --always):
+TELEGRAM_BOT_TOKEN=… TELEGRAM_CHAT_ID=… bash ops/fleet/notify.sh ops/fleet/instances.csv
+# (no bot token set → prints the summary and exits 0, so it's still a useful cron log line)
+```
+
+`status.sh` overall rollup: **DOWN** = public site/api unreachable or containers not all up ·
+**WARN** = reachable but backup stale/missing, DB round-trip failed, or tunnel down · **OK** =
+all green. Column meanings and what to do about a WARN are in
+[`docs/fleet-maintenance.md`](../../docs/fleet-maintenance.md) §3.
+
+### Schedule it (dashboard + alerts every 15 min)
+
+`homestead-fleet-status.service` + `.timer` are **one host-wide** job (NOT per-instance): they
+read the whole CSV, repaint the dashboard, and fire alerts for any WARN/DOWN. Install once per
+host via an EnvironmentFile:
+
+```bash
+sudo mkdir -p /etc/homestead
+printf 'REPO_ROOT=%s\nFLEET_CSV=%s\n' \
+  /home/borui/homestead-vanwashpro-preview \
+  /home/borui/homestead-vanwashpro-preview/ops/fleet/instances.csv \
+  | sudo tee /etc/homestead/fleet.env
+# optional in that file: DASHBOARD_OUT=…  TELEGRAM_BOT_TOKEN=…  TELEGRAM_CHAT_ID=…
+sudo cp ops/fleet/homestead-fleet-status.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now homestead-fleet-status.timer   # timer drives the service
+sudo systemctl start  homestead-fleet-status.service       # one-shot test run
+journalctl -u homestead-fleet-status.service -n 40         # inspect
+```
+
+Adjust `User=` in the service to your ops user (it must reach Docker). A `--user` install works
+too — see the header comment in `homestead-fleet-status.service`. This is separate from the
+**per-instance** backup timer (`homestead-backup@<inst>.timer`, see
+[`../backup/README.md`](../backup/README.md)); once a new row is in this CSV, the fleet timer
+picks it up automatically on its next tick.
+
+> Full operations manual — daily/weekly rhythm, safe rolling updates, incident playbooks,
+> capacity planning, and onboarding a new instance: **[`docs/fleet-maintenance.md`](../../docs/fleet-maintenance.md)**.
