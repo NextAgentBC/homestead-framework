@@ -7,6 +7,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Optional
 
+import requests
 from flask import Blueprint, current_app, jsonify, request
 from slugify import slugify
 from sqlalchemy.orm.attributes import flag_modified
@@ -15,7 +16,7 @@ from werkzeug.utils import secure_filename
 from ..auth import require_auth
 from ..extensions import db
 from ..models import BlockPattern, BlogPost, ChatConversation, ChatMessage, DesignProfile, Page, Revision, UiMessages
-from ..services.ai_service import generate_blog_post
+from ..services.ai_service import AIUnavailable, generate_blog_post
 from ..services.competitor_analyzer import analyze_competitors
 from ..services.design_service import apply_style, deep_merge, normalized_profile, profile_for_industry
 from ..services import block_service, consistency_service, revision_service, site_service
@@ -86,7 +87,13 @@ def _create_post(data: dict, publish: bool) -> BlogPost:
 @require_auth(admin=True)
 def generate_blog():
     data = request.get_json(silent=True) or {}
-    generated = generate_blog_post(data.get("topic"))
+    try:
+        generated = generate_blog_post(data.get("topic"))
+    except AIUnavailable:
+        return jsonify({"error": {"code": "ai_unavailable", "message": "No AI model is configured; nothing was generated"}}), 503
+    except (requests.RequestException, ValueError, KeyError) as exc:
+        current_app.logger.warning("blog generation failed: %s", str(exc)[:200])
+        return jsonify({"error": {"code": "ai_failed", "message": "The AI model did not return a usable article"}}), 502
     post = _create_post(generated, publish=bool(data.get("publish", False)))
     return {"item": post.to_detail_dict()}
 

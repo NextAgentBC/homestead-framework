@@ -65,7 +65,7 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/admin/blogs` · PATCH `/admin/blogs/{id}` | 建 / 改博客（`?locale=` 改某语言） |
-| POST | `/admin/blogs/generate` | AI 生成博客 |
+| POST | `/admin/blogs/generate` | AI 生成博客；没配 `DEEPSEEK_API_KEY` 时什么都不生成（503 `ai_unavailable`），每日定时任务直接跳过 |
 | POST | `/admin/pages` · PATCH / DELETE `/admin/pages/{id}` | 建 / 改 / 删页面 |
 
 **编排 compose（按 block 改页面）** — `target` = `home` 或页面 slug
