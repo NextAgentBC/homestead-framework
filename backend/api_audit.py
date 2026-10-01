@@ -63,7 +63,7 @@ bid=j(r).get("item",{}).get("id"); bslug=j(r).get("item",{}).get("slug"); chk("P
 r=c.patch(f"/api/admin/blogs/{bid}", json={"excerpt":"new excerpt"}, headers=H); chk("PATCH /admin/blogs/{id}", r.status_code==200, str(r.status_code))
 r=c.patch(f"/api/admin/blogs/{bid}?locale=zh", json={"title":"中文标题"}, headers=H); chk("PATCH /admin/blogs/{id}?locale=zh", r.status_code==200, str(r.status_code))
 r=c.get(f"/api/blogs/{bslug}?locale=zh"); chk("blog zh reflects translation", r.status_code==200 and j(r)["item"]["title"]=="中文标题", str(j(r).get('item',{}).get('title')))
-r=c.post("/api/admin/blogs/generate", json={"topic":"education"}, headers=H); chk("POST /admin/blogs/generate (fallback)", r.status_code==200 and j(r)["item"]["title"], str(r.status_code))
+r=c.post("/api/admin/blogs/generate", json={"topic":"education"}, headers=H); chk("POST /admin/blogs/generate (no model: nothing generated)", r.status_code==503 and j(r)["error"]["code"]=="ai_unavailable", str(r.status_code))
 
 # ---------- ADMIN: pages ----------
 r=c.post("/api/admin/pages", json={"title":"About","slug":"about","sections":[{"type":"hero","content":{"headline":"Hi"}}],"status":"published"}, headers=H)

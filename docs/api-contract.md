@@ -30,7 +30,7 @@ The backend is intentionally OpenClaw-friendly: resources are grouped by domain,
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/admin/blogs/generate` | Generate a draft/published AI blog |
+| `POST` | `/api/admin/blogs/generate` | Generate a draft/published AI blog. Without a configured model (`DEEPSEEK_API_KEY`) nothing is created: `503 ai_unavailable`; a failed model call is `502 ai_failed`. The daily `flask blog generate-daily` skips in that case. |
 | `POST` `PATCH` | `/api/admin/blogs` · `…/:id` | Create / update a blog post (`?locale=` localizes) |
 | `POST` `PATCH` `DELETE` | `/api/admin/pages` · `…/:id` | Create / update / delete a content page |
 | `GET` `PATCH` | `/api/admin/design` | Read / update tokens, sections, voice |

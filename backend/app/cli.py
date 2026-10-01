@@ -8,24 +8,28 @@ from typing import Optional
 
 import click
 from flask import current_app
+from flask.cli import AppGroup
 
 from .auth import issue_jwt
 from .extensions import db
 from .models import BlogPost, DesignProfile, Page, SiteSettings, UiMessages, User
 from .routes.admin import _create_post
 from .services import site_service
-from .services.ai_service import generate_blog_post
+from .services.ai_service import AIUnavailable, generate_blog_post
 
-@click.group("blog")
-def blog_cli():
-    """Blog operations."""
+blog_cli = AppGroup("blog", help="Blog operations.")
 
 
 @blog_cli.command("generate-daily")
 @click.option("--topic", default=None)
 @click.option("--draft", is_flag=True)
 def generate_daily(topic: Optional[str], draft: bool):
-    generated = generate_blog_post(topic)
+    try:
+        generated = generate_blog_post(topic)
+    except AIUnavailable:
+        # The daily timer keeps running; without a model there is simply no post today.
+        click.echo("generate-daily: skipped, no AI model is configured (DEEPSEEK_API_KEY); nothing was published.")
+        return
     publish = current_app.config["DAILY_BLOG_AUTOPUBLISH"] and not draft
     post = _create_post(generated, publish=publish)
     if not publish:
